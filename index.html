@@ -294,6 +294,7 @@
     </main>
 
     <div id="toast">Notification</div>
+    
     <div id="successModal" style="display:none; position:fixed; z-index:2001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); justify-content:center; align-items:center;">
         <div class="reg-content" style="max-width:400px;">
             <h2 id="successMessage"></h2>
@@ -359,13 +360,14 @@
             localStorage.removeItem('auraCustomer');
             customerData = { name: '', cell: '' };
             cart = {};
+            selectedPayment = '';
+            document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
             updateCartDisplay();
             document.getElementById('welcomeUser').innerText = 'Welcome to AuraPOS';
             document.getElementById('signOutBtn').style.display = 'none';
             document.getElementById('regModal').style.display = 'flex';
             document.getElementById('custName').value = '';
             document.getElementById('custCell').value = '';
-            showToast('Session ended.');
         }
 
         document.getElementById('signOutBtn').addEventListener('click', signOut);
@@ -380,8 +382,6 @@
             customerData = { name, cell };
             localStorage.setItem('auraCustomer', JSON.stringify(customerData));
             enterKiosk();
-            document.getElementById('successMessage').innerText = `Welcome, ${name}!`;
-            document.getElementById('successModal').style.display = 'flex';
         });
 
         onValue(inventoryRef, (snapshot) => {
@@ -396,7 +396,6 @@
             const categories = new Set();
             Object.values(inventoryData).forEach(item => categories.add(item.category || 'General'));
             
-            // "All" button
             const allBtn = document.createElement('button');
             allBtn.className = `category-btn ${!selectedCategory ? 'active' : ''}`;
             allBtn.textContent = "All Items";
@@ -507,11 +506,17 @@
             if (!selectedPayment) { showToast('Select payment method.'); return; }
             
             processOrder();
+            
             const orderNumber = Math.floor(100000 + Math.random() * 900000);
-            document.getElementById('successMessage').innerText = (selectedPayment === 'cash') ? 
-                `Order #${orderNumber} placed. Pay at counter.` : `Payment Successful! Thank you.`;
-            showResetButton();
+            const msg = (selectedPayment === 'cash') ? 
+                `Order #${orderNumber} placed. Pay at counter. Thank you for your order! Next customer.` : 
+                `Payment Successful! Thank you for your order! Next customer.`;
+            
+            document.getElementById('successMessage').innerText = msg;
             document.getElementById('successModal').style.display = 'flex';
+            
+            // Instantly clear current session to be ready for next customer
+            signOut();
         });
 
         function processOrder() {
@@ -527,24 +532,11 @@
                     cell: customerData.cell
                 });
             });
-            cart = {};
-            updateCartDisplay();
         }
 
-        function showResetButton() {
-            if(!document.getElementById('resetKioskBtn')) {
-                const btn = document.createElement('button');
-                btn.className = 'btn-pill';
-                btn.id = 'resetKioskBtn';
-                btn.textContent = 'New Customer';
-                btn.style.background = 'var(--accent-color)';
-                btn.style.color = 'white';
-                btn.onclick = () => { signOut(); document.getElementById('successModal').style.display = 'none'; btn.remove(); };
-                document.getElementById('modalButtons').appendChild(btn);
-            }
-        }
-
-        document.getElementById('okSuccessBtn').onclick = () => document.getElementById('successModal').style.display = 'none';
+        document.getElementById('okSuccessBtn').onclick = () => {
+            document.getElementById('successModal').style.display = 'none';
+        };
 
         function showToast(message) {
             const toast = document.getElementById("toast");
