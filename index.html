@@ -17,11 +17,11 @@
             --accent-color: #00B894;
             --sidebar-width: 320px;
         }
-      
+       
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; user-select: none; }
-      
+       
         ::-webkit-scrollbar { width: 0px; background: transparent; }
-      
+       
         body {
             background-color: var(--bg-light);
             color: var(--dark-text);
@@ -191,11 +191,6 @@
             transition: var(--transition);
         }
         .btn-pill:active { transform: scale(0.98); }
-        .btn-secondary {
-            background: #e9ecef; 
-            color: #333; 
-            margin-top: 12px;
-        }
         .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .category-btn {
             padding: 14px 15px; border-radius: 12px;
@@ -227,6 +222,23 @@
             font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s ease;
         }
         #toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* Print styles for receipt */
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print {
+                position: absolute;
+                left: 0; top: 0;
+                width: 80mm;
+                padding: 10px;
+                font-family: monospace;
+                font-size: 12px;
+                color: black !important;
+                text-align: center;
+            }
+        }
+
         @media (max-width: 850px) {
             .menu-toggle { display: flex; }
             .sidebar { transform: translateX(-100%); width: 320px; box-shadow: 15px 0 40px rgba(0,0,0,0.1); }
@@ -248,10 +260,13 @@
             <p>Touch Anywhere To Start</p>
         </div>
     </div>
+
     <button class="menu-toggle" id="menuToggle">
         <span></span><span></span><span></span>
     </button>
+
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div id="regModal" class="modal">
         <div class="reg-content">
             <div class="logo-sq" style="margin: 0 auto 15px;">A</div>
@@ -263,15 +278,22 @@
             <button style="margin-top:15px; background:none; border:none; color:var(--muted-text); cursor:pointer; font-weight:600;" onclick="closeModal('regModal')">Back to Menu</button>
         </div>
     </div>
+
     <div id="successModal" class="modal">
         <div class="reg-content">
             <div class="logo-sq" style="margin: 0 auto 15px; background: var(--accent-color); color: white;">✓</div>
             <h2 id="successMessage"></h2>
             <p style="margin: 15px 0; color: var(--muted-text);">Thank you for your order! Next customer.</p>
-            <button class="btn-pill" id="okSuccessBtn">Done</button>
-            <button class="btn-pill btn-secondary" id="printReceiptBtn">🖨️ Print Receipt</button>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                <button class="btn-pill" id="printReceiptBtn">Print Receipt</button>
+                <button class="btn-pill" id="okSuccessBtn" style="background: #eee; color: #333;">Done</button>
+            </div>
         </div>
     </div>
+
+    <!-- Hidden receipt container for printing -->
+    <div id="receipt-print" style="display:none;"></div>
+
     <aside class="sidebar" id="sidebar">
         <div class="logo-container">
             <div class="logo-sq">A</div>
@@ -281,7 +303,7 @@
         <div class="category-list" id="categoryButtons"></div>
         <h3 style="font-size:12px; color:var(--muted-text); margin-top:10px; margin-bottom:10px;">YOUR CART</h3>
         <ul id="cartList"></ul>
-      
+       
         <div style="margin-bottom: 15px;">
             <p style="font-size: 11px; color: var(--muted-text); margin-bottom: 8px; font-weight: 700;">PAYMENT METHOD</p>
             <div class="payment-options">
@@ -299,12 +321,15 @@
                 </div>
             </div>
         </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #F8F9FA; padding: 15px; border-radius: 12px;">
             <span style="font-weight: 700;">Total Amount</span>
             <span style="font-weight: 800; font-size: 22px; color: var(--accent-color);">R <span id="cartTotal">0.00</span></span>
         </div>
+
         <button class="btn-pill" id="checkoutBtn">Checkout Now</button>
     </aside>
+
     <main class="main-content">
         <div class="header-flex" style="margin-bottom: 30px;">
             <div class="greeting">
@@ -314,12 +339,13 @@
         </div>
         <div id="menuContainer"></div>
     </main>
+
     <div id="toast">Notification</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-      
+       
         const firebaseConfig = {
             apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
             authDomain: "pinotp-d7ef5.firebaseapp.com",
@@ -337,11 +363,11 @@
         let cart = {};
         let selectedPayment = '';
         let selectedCategory = '';
+        let lastOrderDetails = null;
         let idleTimeLimit = 5000;
         let idleTimer, slideshowInterval;
         let slideImages = [];
         let currentSlideIndex = 0;
-        let currentOrderNumber = '';
 
         const attractScreen = document.getElementById('attractScreen');
         const attractImage = document.getElementById('attractImage');
@@ -368,7 +394,7 @@
         function startSlideshow() {
             clearInterval(slideshowInterval);
             if (slideImages.length === 0) return;
-          
+           
             attractImage.src = slideImages[currentSlideIndex];
             attractImage.style.opacity = 0.6;
             slideshowInterval = setInterval(() => {
@@ -415,11 +441,13 @@
             container.innerHTML = '';
             const categories = new Set();
             Object.values(inventoryData).forEach(item => categories.add(item.category || 'General'));
+
             const allBtn = document.createElement('button');
             allBtn.className = `category-btn ${!selectedCategory ? 'active' : ''}`;
             allBtn.textContent = "All Items";
             allBtn.onclick = () => { selectedCategory = ''; displayCategories(); displayMenu(); };
             container.appendChild(allBtn);
+
             categories.forEach(cat => {
                 const btn = document.createElement('button');
                 btn.className = `category-btn ${selectedCategory === cat ? 'active' : ''}`;
@@ -439,6 +467,7 @@
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push({key, ...item});
             });
+
             Object.keys(grouped).forEach(cat => {
                 const catDiv = document.createElement('div');
                 catDiv.innerHTML = `<h4 style="margin:20px 0 15px; font-size: 1.2rem; color: #333;">${cat}</h4>`;
@@ -523,14 +552,18 @@
         function processOrder(name, cell) {
             const timestamp = Date.now();
             const orderNum = String(timestamp).slice(-4);
-            currentOrderNumber = orderNum;
-          
+            let itemsList = [];
+            let total = 0;
+
             Object.entries(cart).forEach(([key, item]) => {
                 const newQty = inventoryData[key].qty - item.qty;
                 update(ref(db, `inventory/${key}`), {qty: newQty});
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+
                 push(salesRef, {
                     name: item.name,
-                    revenue: (item.price * item.qty).toFixed(2),
+                    revenue: itemTotal.toFixed(2),
                     timestamp: timestamp,
                     qty: item.qty,
                     customer: name,
@@ -540,94 +573,88 @@
                     source: "Kiosk",
                     paymentMethod: selectedPayment
                 });
+
+                itemsList.push({name: item.name, qty: item.qty, price: item.price});
             });
+
+            lastOrderDetails = {
+                orderNum,
+                customer: name,
+                cell,
+                items: itemsList,
+                total,
+                paymentMethod: selectedPayment,
+                timestamp
+            };
 
             document.getElementById('successMessage').innerText = `Order #${orderNum} Confirmed!`;
             document.getElementById('regModal').style.display = 'none';
             document.getElementById('successModal').style.display = 'flex';
-            if(window.innerWidth <= 850) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+
+            if(window.innerWidth <= 850) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            }
         }
+
+        // Print receipt function
+        function printKioskReceipt() {
+            if (!lastOrderDetails) return;
+
+            const { orderNum, customer, cell, items, total, paymentMethod, timestamp } = lastOrderDetails;
+            const date = new Date(timestamp).toLocaleDateString('en-ZA');
+            const time = new Date(timestamp).toLocaleTimeString('en-ZA', {hour12: false});
+
+            let itemsHtml = items.map(i => `
+                <div style="display:flex; justify-content:space-between; margin:4px 0; font-size:13px;">
+                    <span>${i.qty} × ${i.name}</span>
+                    <span>R ${(i.price * i.qty).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            const receiptDiv = document.getElementById('receipt-print');
+            receiptDiv.innerHTML = `
+                <div style="font-weight:bold; font-size:16px;">AURAPOS KIOSK RECEIPT</div>
+                <div style="margin:8px 0; font-size:13px;">Order #${orderNum}</div>
+                <hr style="border-top:1px dashed #000; margin:8px 0;">
+                <div style="text-align:left; font-size:13px; line-height:1.4;">
+                    <div><strong>Customer:</strong> ${customer}</div>
+                    <div><strong>Cell:</strong> ${cell}</div>
+                    <div><strong>Date:</strong> ${date}</div>
+                    <div><strong>Time:</strong> ${time}</div>
+                    <div><strong>Payment:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</div>
+                </div>
+                <hr style="border-top:1px dashed #000; margin:10px 0;">
+                <div style="text-align:left;">
+                    ${itemsHtml}
+                </div>
+                <hr style="border-top:1px dashed #000; margin:10px 0;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
+                    <span>TOTAL</span>
+                    <span>R ${total.toFixed(2)}</span>
+                </div>
+                <br>
+                <div style="font-size:12px;">Thank you! Visit us again.</div>
+            `;
+
+            window.print();
+        }
+
+        document.getElementById('printReceiptBtn').addEventListener('click', () => {
+            printKioskReceipt();
+        });
 
         document.getElementById('okSuccessBtn').onclick = () => {
             cart = {};
             selectedPayment = '';
-            currentOrderNumber = '';
             document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
             document.getElementById('custName').value = '';
             document.getElementById('custCell').value = '';
             updateCartDisplay();
             document.getElementById('successModal').style.display = 'none';
+            lastOrderDetails = null;
             window.scrollTo({top: 0, behavior: 'smooth'});
             resetIdleTimer();
-        };
-
-        // Print receipt button handler (basic window.print version)
-        document.getElementById('printReceiptBtn').onclick = () => {
-            if (!currentOrderNumber) {
-                showToast("No order information available");
-                return;
-            }
-
-            // Simple receipt content - you can make this much nicer with better formatting
-            const receiptWindow = window.open('', '_blank');
-            receiptWindow.document.write(`
-                <html>
-                <head>
-                    <title>Order #${currentOrderNumber} Receipt</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; }
-                        h1 { text-align: center; margin-bottom: 8px; }
-                        .info { text-align: center; color: #555; margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-                        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
-                        .total { font-weight: bold; font-size: 16px; margin-top: 20px; text-align: right; }
-                        .thanks { text-align: center; margin-top: 30px; font-style: italic; }
-                    </style>
-                </head>
-                <body>
-                    <h1>AuraPOS Kiosk</h1>
-                    <div class="info">Order #${currentOrderNumber}<br>${new Date().toLocaleString()}</div>
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `);
-
-            let total = 0;
-            Object.values(cart).forEach(item => {
-                const subtotal = item.price * item.qty;
-                total += subtotal;
-                receiptWindow.document.write(`
-                    <tr>
-                        <td>${item.name}</td>
-                        <td>${item.qty}</td>
-                        <td>R ${subtotal.toFixed(2)}</td>
-                    </tr>
-                `);
-            });
-
-            receiptWindow.document.write(`
-                        </tbody>
-                    </table>
-                    
-                    <div class="total">Total: R ${total.toFixed(2)}</div>
-                    <div class="total" style="margin-top:8px;">Payment: ${selectedPayment.charAt(0).toUpperCase() + selectedPayment.slice(1)}</div>
-                    
-                    <div class="thanks">Thank you for your order!<br>Come back soon! 🍔</div>
-                    
-                    <script>
-                        window.onload = () => { window.print(); setTimeout(() => window.close(), 800); };
-                    </script>
-                </body>
-                </html>
-            `);
-            receiptWindow.document.close();
         };
 
         window.closeModal = (id) => { 
