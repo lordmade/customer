@@ -18,9 +18,8 @@
             --sidebar-width: 320px;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; user-select: none; /* Prevents text selection on touch */ }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; user-select: none; }
         
-        /* Hide scrollbar for a cleaner Kiosk look */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
         
         body { 
@@ -32,7 +31,6 @@
             overflow-x: hidden;
         }
 
-        /* --- ATTRACT SCREEN (SCREENSAVER) --- */
         #attractScreen {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -85,7 +83,6 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
         }
 
-        /* SIDEBAR / CART STYLING */
         .sidebar {
             width: var(--sidebar-width);
             height: 100vh;
@@ -108,7 +105,6 @@
             height: 100vh;
         }
 
-        /* HAMBURGER MENU BUTTON */
         .menu-toggle {
             display: none;
             position: fixed;
@@ -134,7 +130,6 @@
             border-radius: 2px;
         }
 
-        /* Registration & Success Modals */
         .modal {
             display: none;
             position: fixed;
@@ -186,7 +181,7 @@
             transition: var(--transition);
             display: flex; flex-direction: column;
         }
-        .item-card:active { transform: scale(0.97); } /* Touch feedback */
+        .item-card:active { transform: scale(0.97); }
         .item-card img {
             width: 100%; height: 140px;
             object-fit: cover; border-radius: 14px;
@@ -241,7 +236,6 @@
         }
         #toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* MOBILE OPTIMIZATIONS */
         @media (max-width: 850px) {
             .menu-toggle { display: flex; }
             .sidebar { transform: translateX(-100%); width: 320px; box-shadow: 15px 0 40px rgba(0,0,0,0.1); }
@@ -364,8 +358,7 @@
         let selectedPayment = '';
         let selectedCategory = '';
 
-        // --- NEW: ATTRACT SCREEN (SCREENSAVER) LOGIC ---
-        let idleTimeLimit = 5000; // 5 seconds of inactivity
+        let idleTimeLimit = 5000; 
         let idleTimer, slideshowInterval;
         let slideImages = [];
         let currentSlideIndex = 0;
@@ -375,7 +368,6 @@
         function resetIdleTimer() {
             clearTimeout(idleTimer);
             hideAttractScreen();
-            // Start the countdown again only if no modal is open (so we don't interrupt a checkout mid-typing)
             if (document.getElementById('regModal').style.display !== 'flex' && 
                 document.getElementById('successModal').style.display !== 'flex') {
                 idleTimer = setTimeout(showAttractScreen, idleTimeLimit);
@@ -396,27 +388,23 @@
             clearInterval(slideshowInterval);
             if (slideImages.length === 0) return;
             
-            // Show first image immediately
             attractImage.src = slideImages[currentSlideIndex];
-            attractImage.style.opacity = 0.6; // Slightly dimmed so text pops
+            attractImage.style.opacity = 0.6;
 
             slideshowInterval = setInterval(() => {
-                attractImage.style.opacity = 0; // Fade out
+                attractImage.style.opacity = 0; 
                 setTimeout(() => {
                     currentSlideIndex = (currentSlideIndex + 1) % slideImages.length;
                     attractImage.src = slideImages[currentSlideIndex];
-                    attractImage.style.opacity = 0.6; // Fade in
-                }, 1000); // Matches CSS transition time
-            }, 3500); // Change image every 3.5 seconds
+                    attractImage.style.opacity = 0.6; 
+                }, 1000); 
+            }, 3500); 
         }
 
-        // Listen for ANY interaction to wake up the kiosk
         ['touchstart', 'mousemove', 'mousedown', 'keydown', 'scroll', 'click'].forEach(evt => {
             document.addEventListener(evt, resetIdleTimer, true);
         });
-        // ------------------------------------------------
 
-        // MOBILE SIDEBAR TOGGLE LOGIC
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -432,20 +420,16 @@
         onValue(inventoryRef, (snapshot) => {
             inventoryData = snapshot.val() || {};
             
-            // Extract images for the attract screen
             slideImages = Object.values(inventoryData)
                 .map(item => item.imageURL)
                 .filter(url => url && url.trim() !== '');
             
-            // Provide a fallback placeholder if the database has no images
             if(slideImages.length === 0) {
                 slideImages = ['https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop'];
             }
 
             displayCategories();
             displayMenu();
-            
-            // Trigger initial attract screen check
             resetIdleTimer();
         });
 
@@ -569,7 +553,6 @@
             const cell = document.getElementById('custCell').value.trim();
             if (!name || !cell) { showToast('Your Name and Cell are required to proceed.'); return; }
             
-            // Show processing effect
             const btn = document.getElementById('confirmOrderBtn');
             btn.innerHTML = 'Processing...';
             btn.disabled = true;
@@ -578,25 +561,29 @@
         });
 
         function processOrder(name, cell) {
+            const timestamp = Date.now();
+            const orderNumber = String(timestamp).slice(-4); 
+
             Object.entries(cart).forEach(([key, item]) => {
                 const newQty = inventoryData[key].qty - item.qty;
                 update(ref(db, `inventory/${key}`), {qty: newQty});
                 push(salesRef, {
                     name: item.name,
                     revenue: (item.price * item.qty).toFixed(2),
-                    timestamp: Date.now(),
+                    timestamp: timestamp,
                     qty: item.qty,
                     customer: name,
-                    cell: cell
+                    cell: cell,
+                    source: "Kiosk",
+                    status: "Pending",
+                    orderNumber: orderNumber 
                 });
             });
 
-            const orderNum = Math.floor(1000 + Math.random() * 9000);
-            document.getElementById('successMessage').innerText = `Order #${orderNum} Confirmed!`;
+            document.getElementById('successMessage').innerText = `Order #${orderNumber} Confirmed!`;
             document.getElementById('regModal').style.display = 'none';
             document.getElementById('successModal').style.display = 'flex';
             
-            // Close sidebar automatically on successful order processing on mobile
             if(window.innerWidth <= 850) {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('show');
@@ -612,7 +599,7 @@
             updateCartDisplay();
             document.getElementById('successModal').style.display = 'none';
             window.scrollTo({top: 0, behavior: 'smooth'});
-            resetIdleTimer(); // Immediately check for idle state again
+            resetIdleTimer();
         };
 
         window.closeModal = (id) => {
@@ -625,7 +612,7 @@
             toast.innerText = message;
             toast.className = "show";
             setTimeout(() => { toast.className = ""; }, 2500);
-        }
+        } 
     </script>
 </body>
 </html>
