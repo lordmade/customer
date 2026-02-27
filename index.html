@@ -173,11 +173,19 @@
             transition: var(--transition);
             display: flex; flex-direction: column;
         }
+        .item-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.12);
+        }
         .item-card:active { transform: scale(0.97); }
         .item-card img {
             width: 100%; height: 140px;
             object-fit: cover; border-radius: 14px;
             margin-bottom: 12px;
+            transition: transform 0.4s ease;
+        }
+        .item-card:hover img {
+            transform: scale(1.08);
         }
         .btn-sell {
             margin-top: auto; width: 100%; padding: 12px;
@@ -190,12 +198,20 @@
             cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
             transition: var(--transition);
         }
+        .btn-pill:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(255,215,0,0.3);
+        }
         .btn-pill:active { transform: scale(0.98); }
         .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .category-btn {
             padding: 14px 15px; border-radius: 12px;
             background: #F8F9FA; border: 1px solid transparent;
             cursor: pointer; font-weight: 700; text-align: left; transition: var(--transition);
+        }
+        .category-btn:hover:not(.active) {
+            background: #f1f3f5;
+            transform: translateX(6px);
         }
         .category-btn.active { background: var(--primary-grad); border-color: transparent; color: #000; }
         ul#cartList { list-style: none; flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
@@ -213,6 +229,10 @@
             padding: 12px 8px; border-radius: 12px; border: 2px solid #eee;
             text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; transition: var(--transition);
         }
+        .payment-card:hover {
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
         .payment-card img { width: 28px; height: 28px; margin-bottom: 6px; display: block; margin: 0 auto; }
         .payment-card.selected { border: 2px solid var(--accent-color); background: #f0fffb; }
         #toast {
@@ -223,7 +243,7 @@
         }
         #toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* NEW FEATURES CSS */
+        /* Promo Carousel - Enhanced visibility & color */
         .promo-carousel {
             position: relative;
             height: 180px;
@@ -242,11 +262,35 @@
             align-items: flex-end;
             color: white;
             padding: 25px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            transition: filter 0.4s ease;
+        }
+        .promo-slide:hover {
+            filter: brightness(1.08);
         }
         .promo-slide.active { display: flex; }
-        .promo-slide h3 { font-size: 1.6rem; margin-bottom: 5px; }
-        .promo-slide p { font-size: 1rem; opacity: 0.9; }
+        .promo-slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.1) 100%);
+            z-index: 1;
+        }
+        .promo-slide > div {
+            position: relative;
+            z-index: 2;
+        }
+        .promo-slide h3 { 
+            font-size: 1.7rem; 
+            margin-bottom: 6px; 
+            font-weight: 800;
+            color: #FFD700;
+        }
+        .promo-slide p {
+            font-size: 1.05rem; 
+            font-weight: 600;
+            opacity: 1;
+        }
 
         .flying-item {
             position: absolute;
@@ -278,9 +322,10 @@
             cursor: pointer;
             transition: var(--transition);
         }
-        .upsell-card:hover, .upsell-card:active {
+        .upsell-card:hover {
             border-color: var(--accent-color);
             transform: scale(1.05);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
         .upsell-card img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
 
@@ -288,6 +333,10 @@
             background: #eee;
             color: #333;
             margin-bottom: 12px;
+        }
+        #clearCartBtn:hover {
+            background: #e0e0e0;
+            transform: scale(1.02);
         }
 
         .virtual-keyboard {
@@ -313,8 +362,9 @@
             font-size: 1.4rem;
             font-weight: 700;
             cursor: pointer;
+            transition: var(--transition);
         }
-        .vk-btn:active { background: #e9ecef; }
+        .vk-btn:hover, .vk-btn:active { background: #e9ecef; transform: scale(1.1); }
 
         #loyaltyInfo {
             background: #f0fffb;
@@ -340,7 +390,6 @@
     </button>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- NEW: Upsell Modal -->
     <div id="upsellModal" class="modal">
         <div class="reg-content">
             <h2 style="margin-bottom:10px;">Would you like fries with that?</h2>
@@ -360,10 +409,8 @@
             <input type="tel" id="custCell" class="reg-input" placeholder="Cell Number" maxlength="10" autocomplete="off" onkeyup="checkLoyalty()">
             <div id="loyaltyInfo"></div>
             
-            <!-- NEW: Order Notes -->
             <textarea id="orderNotes" class="reg-input" placeholder="Order notes (e.g. No onions, extra spicy, well done)" rows="3"></textarea>
 
-            <!-- NEW: On-screen keyboard toggle -->
             <button onclick="toggleVirtualKeyboard()" style="background:none;border:none;color:var(--accent-color);font-size:13px;margin-bottom:12px;cursor:pointer;">📱 Show numeric keyboard</button>
 
             <button class="btn-pill" id="confirmOrderBtn">Complete Purchase</button>
@@ -383,7 +430,6 @@
         </div>
     </div>
 
-    <!-- Hidden receipt container for printing -->
     <div id="receipt-print" style="display:none;"></div>
 
     <aside class="sidebar" id="sidebar">
@@ -397,7 +443,6 @@
         <h3 style="font-size:12px; color:var(--muted-text); margin-top:10px; margin-bottom:10px;">YOUR CART</h3>
         <ul id="cartList"></ul>
         
-        <!-- NEW: Clear Cart -->
         <button id="clearCartBtn" class="btn-pill" onclick="clearCartConfirm()">🗑️ Clear Cart</button>
 
         <div style="margin-bottom: 15px;">
@@ -432,7 +477,7 @@
             </div>
         </div>
 
-        <!-- NEW: Promotional Banner / Carousel -->
+        <!-- Promotional Banner / Carousel - always visible with enhanced colors -->
         <div id="promoCarousel" class="promo-carousel">
             <div class="promo-slide active" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34b4?q=80&w=2070&auto=format&fit=crop');">
                 <div>
@@ -454,7 +499,7 @@
             </div>
         </div>
 
-        <!-- NEW: Popular / Best-sellers Section -->
+        <!-- Popular section - ONLY under All Items tab -->
         <div id="popularSection" style="display:none;">
             <h4 style="margin:20px 0 15px; font-size: 1.4rem; color: #333;">🔥 Popular Right Now</h4>
             <div id="popularGrid" class="item-grid"></div>
@@ -463,7 +508,6 @@
         <div id="menuContainer"></div>
     </main>
 
-    <!-- NEW: Virtual Keyboard -->
     <div id="virtualKeyboard" class="virtual-keyboard">
         <button class="vk-btn" onclick="vkPress('1')">1</button>
         <button class="vk-btn" onclick="vkPress('2')">2</button>
@@ -510,7 +554,6 @@
         let currentSlideIndex = 0;
         let lastAddedKey = null;
 
-        // NEW: Mock loyalty data (you can later move this to Firebase 'loyalty' node)
         const loyaltyData = {
             "0712345678": { points: 245, value: 24.50 },
             "0823456789": { points: 180, value: 18.00 },
@@ -567,7 +610,6 @@
         menuToggle.onclick = toggleSidebar;
         overlay.onclick = toggleSidebar;
 
-        // Load inventory + sales
         onValue(inventoryRef, (snapshot) => {
             inventoryData = snapshot.val() || {};
             slideImages = Object.values(inventoryData)
@@ -591,7 +633,7 @@
                     }
                 });
             }
-            displayMenu(); // refresh popular
+            displayMenu();
         });
 
         function displayCategories() {
@@ -617,40 +659,45 @@
             const container = document.getElementById('menuContainer');
             container.innerHTML = '';
 
-            // Popular / Best-sellers
+            // Popular section ONLY under All Items tab
             const popularDiv = document.getElementById('popularSection');
             const popularGrid = document.getElementById('popularGrid');
             popularGrid.innerHTML = '';
-            const sortedPopular = Object.entries(inventoryData)
-                .map(([key, item]) => ({
-                    key,
-                    ...item,
-                    sales: salesCounts[item.name] || 0
-                }))
-                .filter(item => item.sales > 0 && item.qty > 0)
-                .sort((a, b) => b.sales - a.sales)
-                .slice(0, 6);
-
-            if (sortedPopular.length > 0) {
+            
+            if (selectedCategory === '') {
                 popularDiv.style.display = 'block';
-                sortedPopular.forEach(item => {
-                    const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-                    card.innerHTML = `
-                        <img src="${item.imageURL || 'https://via.placeholder.com/200'}" alt="${item.name}">
-                        <h5 style="font-size:16px; margin-bottom: 5px;">${item.name}</h5>
-                        <p style="color:var(--accent-color); font-weight:800; font-size: 18px; margin-bottom:15px;">R ${parseFloat(finalPrice).toFixed(2)}</p>
-                        <button class="btn-sell">+ Add to Order</button>
-                    `;
-                    card.querySelector('button').onclick = () => addToCart(item.key, item.name, finalPrice, item.imageURL);
-                    popularGrid.appendChild(card);
-                });
+                const sortedPopular = Object.entries(inventoryData)
+                    .map(([key, item]) => ({
+                        key,
+                        ...item,
+                        sales: salesCounts[item.name] || 0
+                    }))
+                    .filter(item => item.sales > 0 && item.qty > 0)
+                    .sort((a, b) => b.sales - a.sales)
+                    .slice(0, 6);
+
+                if (sortedPopular.length > 0) {
+                    sortedPopular.forEach(item => {
+                        const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <img src="${item.imageURL || 'https://via.placeholder.com/200'}" alt="${item.name}">
+                            <h5 style="font-size:16px; margin-bottom: 5px;">${item.name}</h5>
+                            <p style="color:var(--accent-color); font-weight:800; font-size: 18px; margin-bottom:15px;">R ${parseFloat(finalPrice).toFixed(2)}</p>
+                            <button class="btn-sell">+ Add to Order</button>
+                        `;
+                        card.querySelector('button').onclick = () => addToCart(item.key, item.name, finalPrice, item.imageURL);
+                        popularGrid.appendChild(card);
+                    });
+                } else {
+                    popularDiv.style.display = 'none';
+                }
             } else {
                 popularDiv.style.display = 'none';
             }
 
-            // Normal menu
+            // Normal menu (always shown)
             const grouped = {};
             Object.entries(inventoryData).forEach(([key, item]) => {
                 const cat = item.category || 'General';
@@ -688,11 +735,7 @@
             updateCartDisplay();
             showToast(`${name} added to cart`);
             lastAddedKey = key;
-
-            // Flying animation
             flyToCart(key, imageURL);
-
-            // Upsell prompt after 400ms
             setTimeout(() => {
                 if (Math.random() < 0.65) showUpsellPrompt(key);
             }, 400);
@@ -890,7 +933,6 @@
             setTimeout(() => { toast.className = ""; }, 2500);
         }
 
-        // NEW: Clear Cart
         function clearCartConfirm() {
             if (Object.keys(cart).length === 0) return;
             if (confirm('Clear entire cart?')) {
@@ -900,13 +942,11 @@
             }
         }
 
-        // NEW: Upsell
         function showUpsellPrompt(addedKey) {
             const modal = document.getElementById('upsellModal');
             const grid = document.getElementById('upsellGrid');
             grid.innerHTML = '';
 
-            // Simple related items (you can expand this)
             const suggestions = Object.entries(inventoryData)
                 .filter(([k, i]) => k !== addedKey && i.qty > 0 && (i.category === 'Sides' || i.category === 'Drinks' || i.name.toLowerCase().includes('fries') || i.name.toLowerCase().includes('drink')))
                 .slice(0, 4);
@@ -935,7 +975,6 @@
             resetIdleTimer();
         }
 
-        // NEW: Loyalty lookup
         function checkLoyalty() {
             const cell = document.getElementById('custCell').value.trim();
             const info = document.getElementById('loyaltyInfo');
@@ -947,7 +986,6 @@
             }
         }
 
-        // NEW: Virtual keyboard
         let vkTarget = null;
         function toggleVirtualKeyboard() {
             const kb = document.getElementById('virtualKeyboard');
@@ -964,7 +1002,6 @@
             checkLoyalty();
         }
 
-        // Keyboard support (Enter on name/cell focuses next, Esc closes modals)
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 const modals = document.querySelectorAll('.modal');
@@ -994,7 +1031,6 @@
             slides[next].classList.add('active');
         }, 5000);
 
-        // Initial call
         resetIdleTimer();
     </script>
 </body>
