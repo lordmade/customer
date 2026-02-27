@@ -243,7 +243,6 @@
         }
         #toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* Promo Carousel - Enhanced visibility & color */
         .promo-carousel {
             position: relative;
             height: 180px;
@@ -477,7 +476,6 @@
             </div>
         </div>
 
-        <!-- Promotional Banner / Carousel - always visible with enhanced colors -->
         <div id="promoCarousel" class="promo-carousel">
             <div class="promo-slide active" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34b4?q=80&w=2070&auto=format&fit=crop');">
                 <div>
@@ -499,7 +497,6 @@
             </div>
         </div>
 
-        <!-- Popular section - ONLY under All Items tab -->
         <div id="popularSection" style="display:none;">
             <h4 style="margin:20px 0 15px; font-size: 1.4rem; color: #333;">🔥 Popular Right Now</h4>
             <div id="popularGrid" class="item-grid"></div>
@@ -659,7 +656,6 @@
             const container = document.getElementById('menuContainer');
             container.innerHTML = '';
 
-            // Popular section ONLY under All Items tab
             const popularDiv = document.getElementById('popularSection');
             const popularGrid = document.getElementById('popularGrid');
             popularGrid.innerHTML = '';
@@ -697,7 +693,6 @@
                 popularDiv.style.display = 'none';
             }
 
-            // Normal menu (always shown)
             const grouped = {};
             Object.entries(inventoryData).forEach(([key, item]) => {
                 const cat = item.category || 'General';
@@ -1021,7 +1016,6 @@
             }
         });
 
-        // Promo carousel auto-rotate
         setInterval(() => {
             const slides = document.querySelectorAll('.promo-slide');
             let active = 0;
@@ -1030,6 +1024,10 @@
             const next = (active + 1) % slides.length;
             slides[next].classList.add('active');
         }, 5000);
+
+        // Expose functions to global scope so inline onclick="..." works with module script
+        window.closeUpsell = closeUpsell;
+        window.clearCartConfirm = clearCartConfirm;
 
         resetIdleTimer();
     </script>
