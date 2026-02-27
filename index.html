@@ -303,8 +303,9 @@
             object-fit: cover;
         }
 
-        #upsellModal .reg-content {
-            max-width: 460px;
+        #upsellModal .reg-content,
+        #clearConfirmModal .reg-content {
+            max-width: 420px;
         }
         .upsell-grid {
             display: grid;
@@ -374,6 +375,35 @@
             font-size: 14px;
             display: none;
         }
+
+        /* RESPONSIVE IMPROVEMENTS FOR ALL SCREEN SIZES */
+        @media (max-width: 850px) {
+            .menu-toggle { display: flex; }
+            .sidebar { transform: translateX(-100%); width: 320px; box-shadow: 15px 0 40px rgba(0,0,0,0.1); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 80px 20px 20px 20px; }
+            .sidebar-overlay {
+                display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+                background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 999;
+            }
+            .sidebar-overlay.show { display: block; }
+            .promo-carousel { height: 160px; margin-bottom: 25px; }
+        }
+        @media (max-width: 600px) {
+            .item-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 15px;
+            }
+            .promo-carousel { height: 140px; }
+            .main-content { padding: 70px 15px 15px 15px; }
+            .reg-content { padding: 25px 20px; max-width: 92%; }
+        }
+        @media (max-width: 420px) {
+            .item-grid {
+                grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+            }
+            .promo-slide h3 { font-size: 1.4rem; }
+        }
     </style>
 </head>
 <body>
@@ -389,12 +419,26 @@
     </button>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+    <!-- Upsell Modal -->
     <div id="upsellModal" class="modal">
         <div class="reg-content">
             <h2 style="margin-bottom:10px;">Would you like fries with that?</h2>
             <p style="color:var(--muted-text); margin-bottom:20px;">Add any of these popular sides</p>
             <div class="upsell-grid" id="upsellGrid"></div>
             <button class="btn-pill" onclick="closeUpsell()">No thanks, continue</button>
+        </div>
+    </div>
+
+    <!-- NEW: Modern Clear Cart Confirmation Modal -->
+    <div id="clearConfirmModal" class="modal">
+        <div class="reg-content">
+            <div class="logo-sq" style="margin: 0 auto 15px; background: #e74c3c; color: white; font-size: 28px;">🗑️</div>
+            <h2 style="margin-bottom: 10px; color: #e74c3c;">Clear Cart?</h2>
+            <p style="color: var(--muted-text); margin-bottom: 25px;">This will remove all items from your cart.<br>Are you sure?</p>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-pill" style="background: #eee; color: #333; flex: 1;" onclick="closeClearConfirmModal()">Cancel</button>
+                <button class="btn-pill" style="flex: 1; background: #e74c3c;" id="confirmClearCartBtn">Yes, Clear Cart</button>
+            </div>
         </div>
     </div>
 
@@ -565,7 +609,8 @@
             hideAttractScreen();
             if (document.getElementById('regModal').style.display !== 'flex' &&
                 document.getElementById('successModal').style.display !== 'flex' &&
-                document.getElementById('upsellModal').style.display !== 'flex') {
+                document.getElementById('upsellModal').style.display !== 'flex' &&
+                document.getElementById('clearConfirmModal').style.display !== 'flex') {
                 idleTimer = setTimeout(showAttractScreen, idleTimeLimit);
             }
         }
@@ -928,14 +973,23 @@
             setTimeout(() => { toast.className = ""; }, 2500);
         }
 
+        // Modern Clear Cart Modal
         function clearCartConfirm() {
             if (Object.keys(cart).length === 0) return;
-            if (confirm('Clear entire cart?')) {
-                cart = {};
-                updateCartDisplay();
-                showToast('Cart cleared');
-            }
+            document.getElementById('clearConfirmModal').style.display = 'flex';
         }
+
+        function closeClearConfirmModal() {
+            document.getElementById('clearConfirmModal').style.display = 'none';
+            resetIdleTimer();
+        }
+
+        document.getElementById('confirmClearCartBtn').addEventListener('click', () => {
+            cart = {};
+            updateCartDisplay();
+            showToast('Cart cleared');
+            closeClearConfirmModal();
+        });
 
         function showUpsellPrompt(addedKey) {
             const modal = document.getElementById('upsellModal');
@@ -1025,9 +1079,9 @@
             slides[next].classList.add('active');
         }, 5000);
 
-        // Expose functions to global scope so inline onclick="..." works with module script
         window.closeUpsell = closeUpsell;
         window.clearCartConfirm = clearCartConfirm;
+        window.closeClearConfirmModal = closeClearConfirmModal;
 
         resetIdleTimer();
     </script>
