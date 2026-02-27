@@ -140,6 +140,16 @@
         }
         .header-flex h1 { font-size: 3rem; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 8px; }
 
+        /* --- Search Bar Input --- */
+        .search-input {
+            width: 100%; padding: 18px 24px; border-radius: var(--radius-md);
+            border: 2px solid #f1f5f9; font-size: 16px; outline: none;
+            transition: var(--transition); background: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+        }
+        .search-input:focus { border-color: #FFD700; background: #fffdf5; box-shadow: 0 8px 25px rgba(255, 184, 0, 0.1); }
+        .search-input::placeholder { color: #cbd5e1; font-weight: 500; }
+
         .item-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -297,10 +307,13 @@
     </aside>
 
     <main class="main-content">
-        <div class="header-flex" style="margin-bottom: 40px;">
+        <div class="header-flex" style="margin-bottom: 40px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center;">
             <div class="greeting">
                 <h1>Our Menu</h1>
                 <p style="color: var(--muted-text); font-size: 1.2rem; font-weight: 500;">Pick your favorites and let us cook for you.</p>
+            </div>
+            <div style="flex: 1; min-width: 260px; max-width: 400px; user-select: auto;">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search menu items..." autocomplete="off">
             </div>
         </div>
         <div id="menuContainer"></div>
@@ -309,7 +322,6 @@
     <div id="toast" style="visibility: hidden; min-width: 280px; background-color: var(--dark-text); color: #fff; text-align: center; border-radius: 20px; padding: 18px; position: fixed; z-index: 3000; left: 50%; transform: translateX(-50%); bottom: 40px; font-size: 14px; font-weight: 700; transition: 0.3s; opacity: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">Notification</div>
 
     <script type="module">
-        /* PRESERVING ALL LOGIC AS REQUESTED */
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
         
@@ -326,18 +338,21 @@
         const db = getDatabase(app);
         const inventoryRef = ref(db, 'inventory');
         const salesRef = ref(db, 'sales');
+        
         let inventoryData = {};
         let cart = {};
         let selectedPayment = '';
         let selectedCategory = '';
+        let searchQuery = ''; // Search State Added
         let lastOrderDetails = null;
-        let idleTimeLimit = 15000; // Increased to 15s for better UX
+        let idleTimeLimit = 15000;
         let idleTimer, slideshowInterval;
         let slideImages = [];
         let currentSlideIndex = 0;
 
         const attractScreen = document.getElementById('attractScreen');
         const attractImage = document.getElementById('attractImage');
+        const searchInput = document.getElementById('searchInput'); // Search DOM element Added
 
         function resetIdleTimer() {
             clearTimeout(idleTimer);
@@ -376,6 +391,13 @@
 
         ['touchstart', 'mousemove', 'mousedown', 'keydown', 'scroll', 'click'].forEach(evt => {
             document.addEventListener(evt, resetIdleTimer, true);
+        });
+
+        // Search Listener Added
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim().toLowerCase();
+            displayMenu();
+            resetIdleTimer();
         });
 
         const menuToggle = document.getElementById('menuToggle');
@@ -429,12 +451,22 @@
             const container = document.getElementById('menuContainer');
             container.innerHTML = '';
             const grouped = {};
+            
             Object.entries(inventoryData).forEach(([key, item]) => {
                 const cat = item.category || 'General';
+                // Filter by Category
                 if (selectedCategory && cat !== selectedCategory) return;
+                // Filter by Search Query (Added Condition)
+                if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) return;
+                
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push({key, ...item});
             });
+
+            if (Object.keys(grouped).length === 0 && searchQuery) {
+                container.innerHTML = `<p style="text-align:center; color:var(--muted-text); font-size:18px; margin-top:50px;">No matching items found for "${searchQuery}".</p>`;
+                return;
+            }
 
             Object.keys(grouped).forEach((cat, index) => {
                 const catDiv = document.createElement('div');
@@ -601,7 +633,13 @@
             document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
             document.getElementById('custName').value = '';
             document.getElementById('custCell').value = '';
+            
+            // Clear search field as well
+            searchInput.value = '';
+            searchQuery = '';
+            
             updateCartDisplay();
+            displayMenu(); // Refresh menu without search
             document.getElementById('successModal').style.display = 'none';
             lastOrderDetails = null;
             window.scrollTo({top: 0, behavior: 'smooth'});
