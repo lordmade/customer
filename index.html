@@ -528,7 +528,6 @@
         <button class="vk-btn" onclick="vkPress('9')">9</button>
         <button class="vk-btn" onclick="vkPress('0')">0</button>
         <button class="vk-btn" onclick="vkPress('←')" style="grid-column: span 2;">←</button>
-        <button class="vk-btn" onclick="closeVirtualKeyboard()" style="grid-column: span 3; background: #e74c3c; color: white;">Exit</button>
     </div>
 
     <div id="toast">Notification</div>
@@ -1039,10 +1038,6 @@
             else { vkTarget.value += val; }
             checkLoyalty();
         }
-        function closeVirtualKeyboard() {
-            const kb = document.getElementById('virtualKeyboard');
-            kb.style.display = 'none';
-        }
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
@@ -1127,9 +1122,8 @@
         window.checkLoyalty = checkLoyalty;
         window.toggleVirtualKeyboard = toggleVirtualKeyboard;
         window.vkPress = vkPress;
-        window.closeVirtualKeyboard = closeVirtualKeyboard;
 
         resetIdleTimer();
     </script>
 </body>
-</html>
+</html>the numeric keybord must have an exit button, dont change anything else and give full code non omitted
