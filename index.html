@@ -68,6 +68,32 @@
             text-align: center;
             padding-bottom: 10%;
         }
+        /* NEW: Caption overlay for carousel slides */
+        #attractCaption {
+            position: absolute;
+            bottom: 18%;
+            left: 0; right: 0;
+            z-index: 10001;
+            text-align: center;
+            padding: 0 40px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        #attractCaption.visible { opacity: 1; }
+        #attractCaptionHeadline {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #FFD700;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.7);
+            margin-bottom: 8px;
+        }
+        #attractCaptionSub {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
         .attract-content h1 { font-size: 3rem; margin-bottom: 15px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .attract-content p {
             font-size: 1.5rem; font-weight: 600;
@@ -184,9 +210,7 @@
             margin-bottom: 12px;
             transition: transform 0.4s ease;
         }
-        .item-card:hover img {
-            transform: scale(1.08);
-        }
+        .item-card:hover img { transform: scale(1.08); }
         .btn-sell {
             margin-top: auto; width: 100%; padding: 12px;
             border-radius: 12px; border: none; background: var(--primary-grad);
@@ -198,10 +222,7 @@
             cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
             transition: var(--transition);
         }
-        .btn-pill:hover {
-            transform: scale(1.03);
-            box-shadow: 0 8px 20px rgba(255,215,0,0.3);
-        }
+        .btn-pill:hover { transform: scale(1.03); box-shadow: 0 8px 20px rgba(255,215,0,0.3); }
         .btn-pill:active { transform: scale(0.98); }
         .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .category-btn {
@@ -209,10 +230,7 @@
             background: #F8F9FA; border: 1px solid transparent;
             cursor: pointer; font-weight: 700; text-align: left; transition: var(--transition);
         }
-        .category-btn:hover:not(.active) {
-            background: #f1f3f5;
-            transform: translateX(6px);
-        }
+        .category-btn:hover:not(.active) { background: #f1f3f5; transform: translateX(6px); }
         .category-btn.active { background: var(--primary-grad); border-color: transparent; color: #000; }
         ul#cartList { list-style: none; flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
         ul#cartList li {
@@ -229,10 +247,7 @@
             padding: 12px 8px; border-radius: 12px; border: 2px solid #eee;
             text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; transition: var(--transition);
         }
-        .payment-card:hover {
-            border-color: var(--accent-color);
-            transform: scale(1.05);
-        }
+        .payment-card:hover { border-color: var(--accent-color); transform: scale(1.05); }
         .payment-card img { width: 28px; height: 28px; margin-bottom: 6px; display: block; margin: 0 auto; }
         .payment-card.selected { border: 2px solid var(--accent-color); background: #f0fffb; }
         #toast {
@@ -264,9 +279,7 @@
             text-shadow: 0 4px 15px rgba(0,0,0,0.8);
             transition: filter 0.4s ease;
         }
-        .promo-slide:hover {
-            filter: brightness(1.08);
-        }
+        .promo-slide:hover { filter: brightness(1.08); }
         .promo-slide.active { display: flex; }
         .promo-slide::after {
             content: '';
@@ -275,21 +288,9 @@
             background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.1) 100%);
             z-index: 1;
         }
-        .promo-slide > div {
-            position: relative;
-            z-index: 2;
-        }
-        .promo-slide h3 { 
-            font-size: 1.7rem; 
-            margin-bottom: 6px; 
-            font-weight: 800;
-            color: #FFD700;
-        }
-        .promo-slide p {
-            font-size: 1.05rem; 
-            font-weight: 600;
-            opacity: 1;
-        }
+        .promo-slide > div { position: relative; z-index: 2; }
+        .promo-slide h3 { font-size: 1.7rem; margin-bottom: 6px; font-weight: 800; color: #FFD700; }
+        .promo-slide p { font-size: 1.05rem; font-weight: 600; opacity: 1; }
 
         .flying-item {
             position: absolute;
@@ -304,9 +305,7 @@
         }
 
         #upsellModal .reg-content,
-        #clearConfirmModal .reg-content {
-            max-width: 420px;
-        }
+        #clearConfirmModal .reg-content { max-width: 420px; }
         .upsell-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -322,22 +321,11 @@
             cursor: pointer;
             transition: var(--transition);
         }
-        .upsell-card:hover {
-            border-color: var(--accent-color);
-            transform: scale(1.05);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        }
+        .upsell-card:hover { border-color: var(--accent-color); transform: scale(1.05); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
         .upsell-card img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
 
-        #clearCartBtn {
-            background: #eee;
-            color: #333;
-            margin-bottom: 12px;
-        }
-        #clearCartBtn:hover {
-            background: #e0e0e0;
-            transform: scale(1.02);
-        }
+        #clearCartBtn { background: #eee; color: #333; margin-bottom: 12px; }
+        #clearCartBtn:hover { background: #e0e0e0; transform: scale(1.02); }
 
         .virtual-keyboard {
             position: fixed;
@@ -376,32 +364,23 @@
             display: none;
         }
 
-        /* RESPONSIVE IMPROVEMENTS FOR ALL SCREEN SIZES */
         @media (max-width: 850px) {
             .menu-toggle { display: flex; }
             .sidebar { transform: translateX(-100%); width: 320px; box-shadow: 15px 0 40px rgba(0,0,0,0.1); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; padding: 80px 20px 20px 20px; }
-            .sidebar-overlay {
-                display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-                background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 999;
-            }
+            .sidebar-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 999; }
             .sidebar-overlay.show { display: block; }
             .promo-carousel { height: 160px; margin-bottom: 25px; }
         }
         @media (max-width: 600px) {
-            .item-grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 15px;
-            }
+            .item-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
             .promo-carousel { height: 140px; }
             .main-content { padding: 70px 15px 15px 15px; }
             .reg-content { padding: 25px 20px; max-width: 92%; }
         }
         @media (max-width: 420px) {
-            .item-grid {
-                grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-            }
+            .item-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); }
             .promo-slide h3 { font-size: 1.4rem; }
         }
     </style>
@@ -409,6 +388,11 @@
 <body>
     <div id="attractScreen" class="active">
         <img id="attractImage" src="" alt="Menu Slideshow">
+        <!-- Caption overlay for manager-uploaded carousel images -->
+        <div id="attractCaption">
+            <div id="attractCaptionHeadline"></div>
+            <div id="attractCaptionSub"></div>
+        </div>
         <div class="attract-content">
             <h1>Hungry?</h1>
             <p>Touch Anywhere To Start</p>
@@ -429,7 +413,7 @@
         </div>
     </div>
 
-    <!-- NEW: Modern Clear Cart Confirmation Modal -->
+    <!-- Clear Cart Confirmation Modal -->
     <div id="clearConfirmModal" class="modal">
         <div class="reg-content">
             <div class="logo-sq" style="margin: 0 auto 15px; background: #e74c3c; color: white; font-size: 28px;">🗑️</div>
@@ -521,24 +505,7 @@
         </div>
 
         <div id="promoCarousel" class="promo-carousel">
-            <div class="promo-slide active" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34b4?q=80&w=2070&auto=format&fit=crop');">
-                <div>
-                    <h3>Happy Hour 4–6 PM</h3>
-                    <p>20% OFF all drinks &amp; sides</p>
-                </div>
-            </div>
-            <div class="promo-slide" style="background-image: url('https://images.unsplash.com/photo-1568908867747-0b2ba3b8c3b3?q=80&w=2070&auto=format&fit=crop');">
-                <div>
-                    <h3>Buy 1 Get 1 FREE Burgers</h3>
-                    <p>This weekend only</p>
-                </div>
-            </div>
-            <div class="promo-slide" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a9c?q=80&w=2070&auto=format&fit=crop');">
-                <div>
-                    <h3>New: Spicy Peri-Peri Wings</h3>
-                    <p>Only R89.90</p>
-                </div>
-            </div>
+            <!-- Promo slides are dynamically rendered from Firebase promoSlides/ — falls back to defaults if none set -->
         </div>
 
         <div id="popularSection" style="display:none;">
@@ -582,6 +549,8 @@
         const db = getDatabase(app);
         const inventoryRef = ref(db, 'inventory');
         const salesRef = ref(db, 'sales');
+        const carouselRef = ref(db, 'carousel'); // dedicated carousel path
+        const promoSlidesRef = ref(db, 'promoSlides'); // promo banner slides
 
         let inventoryData = {};
         let salesCounts = {};
@@ -591,7 +560,10 @@
         let lastOrderDetails = null;
         let idleTimeLimit = 5000;
         let idleTimer, slideshowInterval;
-        let slideImages = [];
+
+        // NEW: slideData stores {imageURL, caption, subtext} objects from Firebase carousel
+        // Falls back to product images if no carousel slides exist
+        let slideData = [];
         let currentSlideIndex = 0;
         let lastAddedKey = null;
 
@@ -603,6 +575,9 @@
 
         const attractScreen = document.getElementById('attractScreen');
         const attractImage = document.getElementById('attractImage');
+        const attractCaption = document.getElementById('attractCaption');
+        const attractCaptionHeadline = document.getElementById('attractCaptionHeadline');
+        const attractCaptionSub = document.getElementById('attractCaptionSub');
 
         function resetIdleTimer() {
             clearTimeout(idleTimer);
@@ -623,20 +598,68 @@
             attractScreen.classList.remove('active');
             clearInterval(slideshowInterval);
         }
+
+        // NEW: Show caption for a slide (if carousel slide has caption/subtext)
+        function showSlideCaption(slide) {
+            if (slide && (slide.caption || slide.subtext)) {
+                attractCaptionHeadline.textContent = slide.caption || '';
+                attractCaptionSub.textContent = slide.subtext || '';
+                attractCaption.classList.add('visible');
+            } else {
+                attractCaption.classList.remove('visible');
+                attractCaptionHeadline.textContent = '';
+                attractCaptionSub.textContent = '';
+            }
+        }
+
         function startSlideshow() {
             clearInterval(slideshowInterval);
-            if (slideImages.length === 0) return;
-            attractImage.src = slideImages[currentSlideIndex];
+            if (slideData.length === 0) return;
+            const current = slideData[currentSlideIndex];
+            attractImage.src = current.imageURL;
             attractImage.style.opacity = 0.6;
+            showSlideCaption(current);
+
             slideshowInterval = setInterval(() => {
+                attractCaption.classList.remove('visible');
                 attractImage.style.opacity = 0;
                 setTimeout(() => {
-                    currentSlideIndex = (currentSlideIndex + 1) % slideImages.length;
-                    attractImage.src = slideImages[currentSlideIndex];
+                    currentSlideIndex = (currentSlideIndex + 1) % slideData.length;
+                    const next = slideData[currentSlideIndex];
+                    attractImage.src = next.imageURL;
                     attractImage.style.opacity = 0.6;
+                    showSlideCaption(next);
                 }, 1000);
             }, 3500);
         }
+
+        // NEW: Listen to Firebase carousel path first; fall back to inventory images
+        let carouselSlides = []; // from Firebase carousel/
+        let inventoryImageURLs = []; // fallback from inventory
+
+        function rebuildSlideData() {
+            if (carouselSlides.length > 0) {
+                // Use manager-uploaded carousel slides (with caption support)
+                slideData = carouselSlides;
+            } else if (inventoryImageURLs.length > 0) {
+                // Fallback: use product images (no captions)
+                slideData = inventoryImageURLs.map(url => ({ imageURL: url, caption: null, subtext: null }));
+            } else {
+                slideData = [{ imageURL: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop', caption: null, subtext: null }];
+            }
+        }
+
+        onValue(carouselRef, (snapshot) => {
+            const data = snapshot.val();
+            carouselSlides = data
+                ? Object.values(data)
+                    .sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0))
+                    .map(s => ({ imageURL: s.imageURL, caption: s.caption || null, subtext: s.subtext || null }))
+                    .filter(s => s.imageURL)
+                : [];
+            rebuildSlideData();
+            currentSlideIndex = 0;
+        });
 
         ['touchstart', 'mousemove', 'mousedown', 'keydown', 'scroll', 'click'].forEach(evt => {
             document.addEventListener(evt, resetIdleTimer, true);
@@ -654,12 +677,10 @@
 
         onValue(inventoryRef, (snapshot) => {
             inventoryData = snapshot.val() || {};
-            slideImages = Object.values(inventoryData)
+            inventoryImageURLs = Object.values(inventoryData)
                 .map(item => item.imageURL)
                 .filter(url => url && url.trim() !== '');
-            if(slideImages.length === 0) {
-                slideImages = ['https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop'];
-            }
+            rebuildSlideData();
             displayCategories();
             displayMenu();
             resetIdleTimer();
@@ -708,11 +729,7 @@
             if (selectedCategory === '') {
                 popularDiv.style.display = 'block';
                 const sortedPopular = Object.entries(inventoryData)
-                    .map(([key, item]) => ({
-                        key,
-                        ...item,
-                        sales: salesCounts[item.name] || 0
-                    }))
+                    .map(([key, item]) => ({ key, ...item, sales: salesCounts[item.name] || 0 }))
                     .filter(item => item.sales > 0 && item.qty > 0)
                     .sort((a, b) => b.sales - a.sales)
                     .slice(0, 6);
@@ -870,10 +887,10 @@
                 push(salesRef, {
                     name: item.name,
                     revenue: itemTotal.toFixed(2),
-                    timestamp: timestamp,
+                    timestamp,
                     qty: item.qty,
                     customer: name,
-                    cell: cell,
+                    cell,
                     orderNumber: orderNum,
                     status: "Pending",
                     source: "Kiosk",
@@ -883,24 +900,12 @@
                 itemsList.push({name: item.name, qty: item.qty, price: item.price});
             });
 
-            lastOrderDetails = {
-                orderNum,
-                customer: name,
-                cell,
-                items: itemsList,
-                total,
-                paymentMethod: selectedPayment,
-                timestamp,
-                notes
-            };
+            lastOrderDetails = { orderNum, customer: name, cell, items: itemsList, total, paymentMethod: selectedPayment, timestamp, notes };
 
             document.getElementById('successMessage').innerText = `Order #${orderNum} Confirmed!`;
             document.getElementById('regModal').style.display = 'none';
             document.getElementById('successModal').style.display = 'flex';
-            if(window.innerWidth <= 850) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('show');
-            }
+            if(window.innerWidth <= 850) { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
         }
 
         function printKioskReceipt() {
@@ -928,9 +933,7 @@
                     ${notes ? `<div><strong>Notes:</strong> ${notes}</div>` : ''}
                 </div>
                 <hr style="border-top:1px dashed #000; margin:10px 0;">
-                <div style="text-align:left;">
-                    ${itemsHtml}
-                </div>
+                <div style="text-align:left;">${itemsHtml}</div>
                 <hr style="border-top:1px dashed #000; margin:10px 0;">
                 <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
                     <span>TOTAL</span>
@@ -942,9 +945,7 @@
             window.print();
         }
 
-        document.getElementById('printReceiptBtn').addEventListener('click', () => {
-            printKioskReceipt();
-        });
+        document.getElementById('printReceiptBtn').addEventListener('click', () => { printKioskReceipt(); });
 
         document.getElementById('okSuccessBtn').onclick = () => {
             cart = {};
@@ -961,10 +962,7 @@
             resetIdleTimer();
         };
 
-        window.closeModal = (id) => { 
-            document.getElementById(id).style.display = 'none'; 
-            resetIdleTimer(); 
-        };
+        window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; resetIdleTimer(); };
 
         function showToast(message) {
             const toast = document.getElementById("toast");
@@ -973,7 +971,6 @@
             setTimeout(() => { toast.className = ""; }, 2500);
         }
 
-        // Modern Clear Cart Modal
         function clearCartConfirm() {
             if (Object.keys(cart).length === 0) return;
             document.getElementById('clearConfirmModal').style.display = 'flex';
@@ -995,11 +992,9 @@
             const modal = document.getElementById('upsellModal');
             const grid = document.getElementById('upsellGrid');
             grid.innerHTML = '';
-
             const suggestions = Object.entries(inventoryData)
                 .filter(([k, i]) => k !== addedKey && i.qty > 0 && (i.category === 'Sides' || i.category === 'Drinks' || i.name.toLowerCase().includes('fries') || i.name.toLowerCase().includes('drink')))
                 .slice(0, 4);
-
             suggestions.forEach(([key, item]) => {
                 const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
                 const card = document.createElement('div');
@@ -1009,13 +1004,9 @@
                     <div style="margin-top:8px;font-weight:700;">${item.name}</div>
                     <div style="color:var(--accent-color);font-size:15px;">R ${parseFloat(finalPrice).toFixed(2)}</div>
                 `;
-                card.onclick = () => {
-                    addToCart(key, item.name, finalPrice, item.imageURL);
-                    closeUpsell();
-                };
+                card.onclick = () => { addToCart(key, item.name, finalPrice, item.imageURL); closeUpsell(); };
                 grid.appendChild(card);
             });
-
             modal.style.display = 'flex';
         }
 
@@ -1043,11 +1034,8 @@
         }
         function vkPress(val) {
             if (!vkTarget) return;
-            if (val === '←') {
-                vkTarget.value = vkTarget.value.slice(0, -1);
-            } else {
-                vkTarget.value += val;
-            }
+            if (val === '←') { vkTarget.value = vkTarget.value.slice(0, -1); }
+            else { vkTarget.value += val; }
             checkLoyalty();
         }
 
@@ -1055,33 +1043,85 @@
             if (e.key === 'Escape') {
                 const modals = document.querySelectorAll('.modal');
                 for (let m of modals) {
-                    if (m.style.display === 'flex') {
-                        m.style.display = 'none';
-                        resetIdleTimer();
-                        return;
-                    }
+                    if (m.style.display === 'flex') { m.style.display = 'none'; resetIdleTimer(); return; }
                 }
             }
             if (e.key === 'Enter') {
                 const activeModal = document.querySelector('.modal[style*="flex"]');
-                if (activeModal && activeModal.id === 'regModal') {
-                    document.getElementById('confirmOrderBtn').click();
-                }
+                if (activeModal && activeModal.id === 'regModal') document.getElementById('confirmOrderBtn').click();
             }
         });
 
-        setInterval(() => {
-            const slides = document.querySelectorAll('.promo-slide');
-            let active = 0;
-            slides.forEach((s, i) => { if (s.classList.contains('active')) active = i; });
-            slides[active].classList.remove('active');
-            const next = (active + 1) % slides.length;
-            slides[next].classList.add('active');
-        }, 5000);
+        // ===== DYNAMIC PROMO CAROUSEL (driven by Firebase promoSlides/) =====
+        // Default hardcoded slides used as fallback when no Firebase promo slides exist
+        const DEFAULT_PROMO_SLIDES = [
+            {
+                imageURL: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34b4?q=80&w=2070&auto=format&fit=crop',
+                caption: 'Happy Hour 4–6 PM',
+                subtext: '20% OFF all drinks & sides'
+            },
+            {
+                imageURL: 'https://images.unsplash.com/photo-1568908867747-0b2ba3b8c3b3?q=80&w=2070&auto=format&fit=crop',
+                caption: 'Buy 1 Get 1 FREE Burgers',
+                subtext: 'This weekend only'
+            },
+            {
+                imageURL: 'https://images.unsplash.com/photo-1600585154340-be6161a56a9c?q=80&w=2070&auto=format&fit=crop',
+                caption: 'New: Spicy Peri-Peri Wings',
+                subtext: 'Only R89.90'
+            }
+        ];
+
+        let promoSlideInterval = null;
+
+        function renderPromoCarousel(slides) {
+            const carousel = document.getElementById('promoCarousel');
+            carousel.innerHTML = '';
+            slides.forEach((slide, i) => {
+                const div = document.createElement('div');
+                div.className = 'promo-slide' + (i === 0 ? ' active' : '');
+                div.style.backgroundImage = `url('${slide.imageURL}')`;
+                div.innerHTML = `<div><h3>${slide.caption || ''}</h3>${slide.subtext ? `<p>${slide.subtext}</p>` : ''}</div>`;
+                carousel.appendChild(div);
+            });
+        }
+
+        function startPromoInterval() {
+            if (promoSlideInterval) clearInterval(promoSlideInterval);
+            promoSlideInterval = setInterval(() => {
+                const slides = document.querySelectorAll('.promo-slide');
+                if (slides.length === 0) return;
+                let active = 0;
+                slides.forEach((s, i) => { if (s.classList.contains('active')) active = i; });
+                slides[active].classList.remove('active');
+                slides[(active + 1) % slides.length].classList.add('active');
+            }, 5000);
+        }
+
+        // Listen to promoSlides in Firebase and update carousel live
+        onValue(promoSlidesRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                const slides = Object.values(data).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+                renderPromoCarousel(slides);
+            } else {
+                // No Firebase promo slides — show the defaults
+                renderPromoCarousel(DEFAULT_PROMO_SLIDES);
+            }
+            startPromoInterval();
+        });
+
+        // Start with defaults immediately (before Firebase responds)
+        renderPromoCarousel(DEFAULT_PROMO_SLIDES);
+        startPromoInterval();
+        // ===== END DYNAMIC PROMO CAROUSEL =====
 
         window.closeUpsell = closeUpsell;
         window.clearCartConfirm = clearCartConfirm;
         window.closeClearConfirmModal = closeClearConfirmModal;
+        window.checkLoyalty = checkLoyalty;
+        window.toggleVirtualKeyboard = toggleVirtualKeyboard;
+        window.vkPress = vkPress;
 
         resetIdleTimer();
     </script>
