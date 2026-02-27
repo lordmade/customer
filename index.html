@@ -1,673 +1,1001 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AuraPOS Kiosk | Customer Ordering</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-grad: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
-            --white: #ffffff;
-            --bg-light: #F7F9FC;
-            --dark-text: #1A1C1E;
-            --muted-text: #6C757D;
-            --card-shadow: 0 10px 30px rgba(0,0,0,0.04);
-            --transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-            --accent-color: #00B894;
-            --sidebar-width: 320px;
-        }
-       
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; user-select: none; }
-       
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-       
-        body {
-            background-color: var(--bg-light);
-            color: var(--dark-text);
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
-        #attractScreen {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #000;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s ease-in-out;
-        }
-        #attractScreen.active {
-            opacity: 1;
-            pointer-events: all;
-            cursor: pointer;
-        }
-        #attractImage {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover;
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
-        }
-        #attractScreen::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 40%);
-        }
-        .attract-content {
-            position: relative;
-            z-index: 10000;
-            color: white;
-            text-align: center;
-            padding-bottom: 10%;
-        }
-        .attract-content h1 { font-size: 3rem; margin-bottom: 15px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .attract-content p {
-            font-size: 1.5rem; font-weight: 600;
-            animation: pulse 1.5s infinite;
-            background: var(--primary-grad);
-            color: #000; padding: 15px 30px; border-radius: 50px;
-            display: inline-block;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
-            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
-        }
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: white;
-            position: fixed;
-            left: 0; top: 0;
-            display: flex;
-            flex-direction: column;
-            padding: 25px 20px;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.03);
-            z-index: 1000;
-            transition: var(--transition);
-        }
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-            height: 100vh;
-        }
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 2001;
-            background: var(--primary-grad);
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-        .menu-toggle span {
-            width: 25px;
-            height: 3px;
-            background: #000;
-            border-radius: 2px;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-        }
-        .reg-content {
-            background: white;
-            padding: 30px;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            animation: slideUp 0.3s ease-out forwards;
-        }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .reg-input {
-            width: 100%; padding: 15px; margin-bottom: 12px;
-            border: 2px solid #eee; border-radius: 12px;
-            font-size: 16px; outline: none; transition: var(--transition);
-        }
-        .reg-input:focus { border-color: #FFD700; }
-        .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
-        .logo-sq {
-            width: 40px; height: 40px; background: var(--primary-grad);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; color: #000; font-size: 20px;
-        }
-        .logo-text { font-size: 20px; font-weight: 800; }
-        .item-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-        }
-        .item-card {
-            background: var(--white);
-            padding: 15px;
-            border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            text-align: center;
-            transition: var(--transition);
-            display: flex; flex-direction: column;
-        }
-        .item-card:active { transform: scale(0.97); }
-        .item-card img {
-            width: 100%; height: 140px;
-            object-fit: cover; border-radius: 14px;
-            margin-bottom: 12px;
-        }
-        .btn-sell {
-            margin-top: auto; width: 100%; padding: 12px;
-            border-radius: 12px; border: none; background: var(--primary-grad);
-            font-weight: 800; font-size: 14px; cursor: pointer; transition: var(--transition);
-        }
-        .btn-pill {
-            background: var(--primary-grad); border: none; padding: 16px;
-            border-radius: 16px; font-weight: 800; font-size: 16px;
-            cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: var(--transition);
-        }
-        .btn-pill:active { transform: scale(0.98); }
-        .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .category-btn {
-            padding: 14px 15px; border-radius: 12px;
-            background: #F8F9FA; border: 1px solid transparent;
-            cursor: pointer; font-weight: 700; text-align: left; transition: var(--transition);
-        }
-        .category-btn.active { background: var(--primary-grad); border-color: transparent; color: #000; }
-        ul#cartList { list-style: none; flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
-        ul#cartList li {
-            display: flex; align-items: center; padding: 12px 0;
-            border-bottom: 1px solid #F1F3F5;
-        }
-        .qty-controls { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-        .qty-controls button {
-            width: 30px; height: 30px; border-radius: 8px; border: none;
-            cursor: pointer; background: #eee; font-size: 16px; font-weight: bold;
-        }
-        .payment-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .payment-card {
-            padding: 12px 8px; border-radius: 12px; border: 2px solid #eee;
-            text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; transition: var(--transition);
-        }
-        .payment-card img { width: 28px; height: 28px; margin-bottom: 6px; display: block; margin: 0 auto; }
-        .payment-card.selected { border: 2px solid var(--accent-color); background: #f0fffb; }
-        #toast {
-            visibility: hidden; min-width: 250px; background-color: #1A1C1E; color: #fff;
-            text-align: center; border-radius: 50px; padding: 16px 20px; position: fixed;
-            z-index: 3000; left: 50%; transform: translateX(-50%) translateY(20px); bottom: 30px;
-            font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s ease;
-        }
-        #toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AuraPOS Kiosk | Customer Ordering</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-grad: linear-gradient(135deg, #FFD700 0%, #FFB800 100%);
+            --white: #ffffff;
+            --bg-light: #F7F9FC;
+            --dark-text: #1A1C1E;
+            --muted-text: #6C757D;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            --transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            --accent-color: #00B894;
+            --sidebar-width: 320px;
+        }
+       
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; user-select: none; }
+       
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+       
+        body {
+            background-color: var(--bg-light);
+            color: var(--dark-text);
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        #attractScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #attractScreen.active {
+            opacity: 1;
+            pointer-events: all;
+            cursor: pointer;
+        }
+        #attractImage {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        #attractScreen::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 40%);
+        }
+        .attract-content {
+            position: relative;
+            z-index: 10000;
+            color: white;
+            text-align: center;
+            padding-bottom: 10%;
+        }
+        .attract-content h1 { font-size: 3rem; margin-bottom: 15px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .attract-content p {
+            font-size: 1.5rem; font-weight: 600;
+            animation: pulse 1.5s infinite;
+            background: var(--primary-grad);
+            color: #000; padding: 15px 30px; border-radius: 50px;
+            display: inline-block;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: white;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 25px 20px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.03);
+            z-index: 1000;
+            transition: var(--transition);
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 2001;
+            background: var(--primary-grad);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #000;
+            border-radius: 2px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+        .reg-content {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .reg-input {
+            width: 100%; padding: 15px; margin-bottom: 12px;
+            border: 2px solid #eee; border-radius: 12px;
+            font-size: 16px; outline: none; transition: var(--transition);
+        }
+        .reg-input:focus { border-color: #FFD700; }
+        .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
+        .logo-sq {
+            width: 40px; height: 40px; background: var(--primary-grad);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: #000; font-size: 20px;
+        }
+        .logo-text { font-size: 20px; font-weight: 800; }
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        .item-card {
+            background: var(--white);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            transition: var(--transition);
+            display: flex; flex-direction: column;
+        }
+        .item-card:active { transform: scale(0.97); }
+        .item-card img {
+            width: 100%; height: 140px;
+            object-fit: cover; border-radius: 14px;
+            margin-bottom: 12px;
+        }
+        .btn-sell {
+            margin-top: auto; width: 100%; padding: 12px;
+            border-radius: 12px; border: none; background: var(--primary-grad);
+            font-weight: 800; font-size: 14px; cursor: pointer; transition: var(--transition);
+        }
+        .btn-pill {
+            background: var(--primary-grad); border: none; padding: 16px;
+            border-radius: 16px; font-weight: 800; font-size: 16px;
+            cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: var(--transition);
+        }
+        .btn-pill:active { transform: scale(0.98); }
+        .category-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .category-btn {
+            padding: 14px 15px; border-radius: 12px;
+            background: #F8F9FA; border: 1px solid transparent;
+            cursor: pointer; font-weight: 700; text-align: left; transition: var(--transition);
+        }
+        .category-btn.active { background: var(--primary-grad); border-color: transparent; color: #000; }
+        ul#cartList { list-style: none; flex: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+        ul#cartList li {
+            display: flex; align-items: center; padding: 12px 0;
+            border-bottom: 1px solid #F1F3F5;
+        }
+        .qty-controls { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+        .qty-controls button {
+            width: 30px; height: 30px; border-radius: 8px; border: none;
+            cursor: pointer; background: #eee; font-size: 16px; font-weight: bold;
+        }
+        .payment-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .payment-card {
+            padding: 12px 8px; border-radius: 12px; border: 2px solid #eee;
+            text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; transition: var(--transition);
+        }
+        .payment-card img { width: 28px; height: 28px; margin-bottom: 6px; display: block; margin: 0 auto; }
+        .payment-card.selected { border: 2px solid var(--accent-color); background: #f0fffb; }
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #1A1C1E; color: #fff;
+            text-align: center; border-radius: 50px; padding: 16px 20px; position: fixed;
+            z-index: 3000; left: 50%; transform: translateX(-50%) translateY(20px); bottom: 30px;
+            font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s ease;
+        }
+        #toast.show { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* Print styles for receipt */
-        @media print {
-            body * { visibility: hidden; }
-            #receipt-print, #receipt-print * { visibility: visible; }
-            #receipt-print {
-                position: absolute;
-                left: 0; top: 0;
-                width: 80mm;
-                padding: 10px;
-                font-family: monospace;
-                font-size: 12px;
-                color: black !important;
-                text-align: center;
-            }
-        }
+        /* NEW FEATURES CSS */
+        .promo-carousel {
+            position: relative;
+            height: 180px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+        }
+        .promo-slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            display: none;
+            align-items: flex-end;
+            color: white;
+            padding: 25px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+        }
+        .promo-slide.active { display: flex; }
+        .promo-slide h3 { font-size: 1.6rem; margin-bottom: 5px; }
+        .promo-slide p { font-size: 1rem; opacity: 0.9; }
 
-        @media (max-width: 850px) {
-            .menu-toggle { display: flex; }
-            .sidebar { transform: translateX(-100%); width: 320px; box-shadow: 15px 0 40px rgba(0,0,0,0.1); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; padding: 80px 20px 20px 20px; }
-            .sidebar-overlay {
-                display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-                background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 999;
-            }
-            .sidebar-overlay.show { display: block; }
-        }
-    </style>
+        .flying-item {
+            position: absolute;
+            z-index: 9999;
+            pointer-events: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.8s;
+            object-fit: cover;
+        }
+
+        #upsellModal .reg-content {
+            max-width: 460px;
+        }
+        .upsell-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .upsell-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .upsell-card:hover, .upsell-card:active {
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+        .upsell-card img { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; }
+
+        #clearCartBtn {
+            background: #eee;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .virtual-keyboard {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            z-index: 3001;
+            width: 320px;
+        }
+        .vk-btn {
+            padding: 18px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .vk-btn:active { background: #e9ecef; }
+
+        #loyaltyInfo {
+            background: #f0fffb;
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div id="attractScreen" class="active">
-        <img id="attractImage" src="" alt="Menu Slideshow">
-        <div class="attract-content">
-            <h1>Hungry?</h1>
-            <p>Touch Anywhere To Start</p>
-        </div>
-    </div>
+    <div id="attractScreen" class="active">
+        <img id="attractImage" src="" alt="Menu Slideshow">
+        <div class="attract-content">
+            <h1>Hungry?</h1>
+            <p>Touch Anywhere To Start</p>
+        </div>
+    </div>
+    <button class="menu-toggle" id="menuToggle">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <button class="menu-toggle" id="menuToggle">
-        <span></span><span></span><span></span>
-    </button>
+    <!-- NEW: Upsell Modal -->
+    <div id="upsellModal" class="modal">
+        <div class="reg-content">
+            <h2 style="margin-bottom:10px;">Would you like fries with that?</h2>
+            <p style="color:var(--muted-text); margin-bottom:20px;">Add any of these popular sides</p>
+            <div class="upsell-grid" id="upsellGrid"></div>
+            <button class="btn-pill" onclick="closeUpsell()">No thanks, continue</button>
+        </div>
+    </div>
 
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div id="regModal" class="modal">
+        <div class="reg-content">
+            <div class="logo-sq" style="margin: 0 auto 15px;">A</div>
+            <h2>Almost Done!</h2>
+            <p style="color: var(--muted-text); margin-bottom: 15px; font-size: 14px;">Please enter your details to complete the order.</p>
+            
+            <input type="text" id="custName" class="reg-input" placeholder="Your Name" autocomplete="off">
+            <input type="tel" id="custCell" class="reg-input" placeholder="Cell Number" maxlength="10" autocomplete="off" onkeyup="checkLoyalty()">
+            <div id="loyaltyInfo"></div>
+            
+            <!-- NEW: Order Notes -->
+            <textarea id="orderNotes" class="reg-input" placeholder="Order notes (e.g. No onions, extra spicy, well done)" rows="3"></textarea>
 
-    <div id="regModal" class="modal">
-        <div class="reg-content">
-            <div class="logo-sq" style="margin: 0 auto 15px;">A</div>
-            <h2>Almost Done!</h2>
-            <p style="color: var(--muted-text); margin-bottom: 20px; font-size: 14px;">Please enter your details to complete the order.</p>
-            <input type="text" id="custName" class="reg-input" placeholder="Your Name" autocomplete="off">
-            <input type="tel" id="custCell" class="reg-input" placeholder="Cell Number" maxlength="10" autocomplete="off">
-            <button class="btn-pill" id="confirmOrderBtn">Complete Purchase</button>
-            <button style="margin-top:15px; background:none; border:none; color:var(--muted-text); cursor:pointer; font-weight:600;" onclick="closeModal('regModal')">Back to Menu</button>
-        </div>
-    </div>
+            <!-- NEW: On-screen keyboard toggle -->
+            <button onclick="toggleVirtualKeyboard()" style="background:none;border:none;color:var(--accent-color);font-size:13px;margin-bottom:12px;cursor:pointer;">📱 Show numeric keyboard</button>
 
-    <div id="successModal" class="modal">
-        <div class="reg-content">
-            <div class="logo-sq" style="margin: 0 auto 15px; background: var(--accent-color); color: white;">✓</div>
-            <h2 id="successMessage"></h2>
-            <p style="margin: 15px 0; color: var(--muted-text);">Thank you for your order! Next customer.</p>
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
-                <button class="btn-pill" id="printReceiptBtn">Print Receipt</button>
-                <button class="btn-pill" id="okSuccessBtn" style="background: #eee; color: #333;">Done</button>
-            </div>
-        </div>
-    </div>
+            <button class="btn-pill" id="confirmOrderBtn">Complete Purchase</button>
+            <button style="margin-top:15px; background:none; border:none; color:var(--muted-text); cursor:pointer; font-weight:600;" onclick="closeModal('regModal')">Back to Menu</button>
+        </div>
+    </div>
 
-    <!-- Hidden receipt container for printing -->
-    <div id="receipt-print" style="display:none;"></div>
+    <div id="successModal" class="modal">
+        <div class="reg-content">
+            <div class="logo-sq" style="margin: 0 auto 15px; background: var(--accent-color); color: white;">✓</div>
+            <h2 id="successMessage"></h2>
+            <p style="margin: 15px 0; color: var(--muted-text);">Thank you for your order! Next customer.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+                <button class="btn-pill" id="printReceiptBtn">Print Receipt</button>
+                <button class="btn-pill" id="okSuccessBtn" style="background: #eee; color: #333;">Done</button>
+            </div>
+        </div>
+    </div>
 
-    <aside class="sidebar" id="sidebar">
-        <div class="logo-container">
-            <div class="logo-sq">A</div>
-            <div class="logo-text">AuraPOS Kiosk</div>
-        </div>
-        <h3 style="font-size:12px; color:var(--muted-text); margin-bottom:10px;">CATEGORIES</h3>
-        <div class="category-list" id="categoryButtons"></div>
-        <h3 style="font-size:12px; color:var(--muted-text); margin-top:10px; margin-bottom:10px;">YOUR CART</h3>
-        <ul id="cartList"></ul>
-       
-        <div style="margin-bottom: 15px;">
-            <p style="font-size: 11px; color: var(--muted-text); margin-bottom: 8px; font-weight: 700;">PAYMENT METHOD</p>
-            <div class="payment-options">
-                <div class="payment-card" data-value="cash">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2489/2489701.png" alt="Cash">
-                    <span>Cash</span>
-                </div>
-                <div class="payment-card" data-value="card">
-                    <img src="https://thumbs.dreamstime.com/b/flat-design-credit-card-icon-illustrating-modern-payment-tool-digital-transactions-light-blue-background-389305309.jpg" alt="Card">
-                    <span>Card</span>
-                </div>
-                <div class="payment-card" data-value="mobile">
-                    <img src="https://cdn-icons-png.flaticon.com/512/888/888870.png" alt="Mobile">
-                    <span>Mobile</span>
-                </div>
-            </div>
-        </div>
+    <!-- Hidden receipt container for printing -->
+    <div id="receipt-print" style="display:none;"></div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #F8F9FA; padding: 15px; border-radius: 12px;">
-            <span style="font-weight: 700;">Total Amount</span>
-            <span style="font-weight: 800; font-size: 22px; color: var(--accent-color);">R <span id="cartTotal">0.00</span></span>
-        </div>
+    <aside class="sidebar" id="sidebar">
+        <div class="logo-container">
+            <div class="logo-sq">A</div>
+            <div class="logo-text">AuraPOS Kiosk</div>
+        </div>
+        <h3 style="font-size:12px; color:var(--muted-text); margin-bottom:10px;">CATEGORIES</h3>
+        <div class="category-list" id="categoryButtons"></div>
+        
+        <h3 style="font-size:12px; color:var(--muted-text); margin-top:10px; margin-bottom:10px;">YOUR CART</h3>
+        <ul id="cartList"></ul>
+        
+        <!-- NEW: Clear Cart -->
+        <button id="clearCartBtn" class="btn-pill" onclick="clearCartConfirm()">🗑️ Clear Cart</button>
 
-        <button class="btn-pill" id="checkoutBtn">Checkout Now</button>
-    </aside>
+        <div style="margin-bottom: 15px;">
+            <p style="font-size: 11px; color: var(--muted-text); margin-bottom: 8px; font-weight: 700;">PAYMENT METHOD</p>
+            <div class="payment-options">
+                <div class="payment-card" data-value="cash">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2489/2489701.png" alt="Cash">
+                    <span>Cash</span>
+                </div>
+                <div class="payment-card" data-value="card">
+                    <img src="https://thumbs.dreamstime.com/b/flat-design-credit-card-icon-illustrating-modern-payment-tool-digital-transactions-light-blue-background-389305309.jpg" alt="Card">
+                    <span>Card</span>
+                </div>
+                <div class="payment-card" data-value="mobile">
+                    <img src="https://cdn-icons-png.flaticon.com/512/888/888870.png" alt="Mobile">
+                    <span>Mobile</span>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #F8F9FA; padding: 15px; border-radius: 12px;">
+            <span style="font-weight: 700;">Total Amount</span>
+            <span style="font-weight: 800; font-size: 22px; color: var(--accent-color);">R <span id="cartTotal">0.00</span></span>
+        </div>
+        <button class="btn-pill" id="checkoutBtn">Checkout Now</button>
+    </aside>
 
-    <main class="main-content">
-        <div class="header-flex" style="margin-bottom: 30px;">
-            <div class="greeting">
-                <h1 style="font-size: 2.2rem;">Our Menu</h1>
-                <p style="color: var(--muted-text); font-size: 1.1rem;">Tap items to add them to your order.</p>
-            </div>
-        </div>
-        <div id="menuContainer"></div>
-    </main>
+    <main class="main-content">
+        <div class="header-flex" style="margin-bottom: 30px;">
+            <div class="greeting">
+                <h1 style="font-size: 2.2rem;">Our Menu</h1>
+                <p style="color: var(--muted-text); font-size: 1.1rem;">Tap items to add them to your order.</p>
+            </div>
+        </div>
 
-    <div id="toast">Notification</div>
+        <!-- NEW: Promotional Banner / Carousel -->
+        <div id="promoCarousel" class="promo-carousel">
+            <div class="promo-slide active" style="background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34b4?q=80&w=2070&auto=format&fit=crop');">
+                <div>
+                    <h3>Happy Hour 4–6 PM</h3>
+                    <p>20% OFF all drinks &amp; sides</p>
+                </div>
+            </div>
+            <div class="promo-slide" style="background-image: url('https://images.unsplash.com/photo-1568908867747-0b2ba3b8c3b3?q=80&w=2070&auto=format&fit=crop');">
+                <div>
+                    <h3>Buy 1 Get 1 FREE Burgers</h3>
+                    <p>This weekend only</p>
+                </div>
+            </div>
+            <div class="promo-slide" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a9c?q=80&w=2070&auto=format&fit=crop');">
+                <div>
+                    <h3>New: Spicy Peri-Peri Wings</h3>
+                    <p>Only R89.90</p>
+                </div>
+            </div>
+        </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-       
-        const firebaseConfig = {
-            apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
-            authDomain: "pinotp-d7ef5.firebaseapp.com",
-            databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
-            projectId: "pinotp-d7ef5",
-            storageBucket: "pinotp-d7ef5.firebasestorage.app",
-            messagingSenderId: "708458917827",
-            appId: "1:708458917827:web:375de278577df0adcf9776"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const inventoryRef = ref(db, 'inventory');
-        const salesRef = ref(db, 'sales');
-        let inventoryData = {};
-        let cart = {};
-        let selectedPayment = '';
-        let selectedCategory = '';
-        let lastOrderDetails = null;
-        let idleTimeLimit = 5000;
-        let idleTimer, slideshowInterval;
-        let slideImages = [];
-        let currentSlideIndex = 0;
+        <!-- NEW: Popular / Best-sellers Section -->
+        <div id="popularSection" style="display:none;">
+            <h4 style="margin:20px 0 15px; font-size: 1.4rem; color: #333;">🔥 Popular Right Now</h4>
+            <div id="popularGrid" class="item-grid"></div>
+        </div>
 
-        const attractScreen = document.getElementById('attractScreen');
-        const attractImage = document.getElementById('attractImage');
+        <div id="menuContainer"></div>
+    </main>
 
-        function resetIdleTimer() {
-            clearTimeout(idleTimer);
-            hideAttractScreen();
-            if (document.getElementById('regModal').style.display !== 'flex' &&
-                document.getElementById('successModal').style.display !== 'flex') {
-                idleTimer = setTimeout(showAttractScreen, idleTimeLimit);
-            }
-        }
+    <!-- NEW: Virtual Keyboard -->
+    <div id="virtualKeyboard" class="virtual-keyboard">
+        <button class="vk-btn" onclick="vkPress('1')">1</button>
+        <button class="vk-btn" onclick="vkPress('2')">2</button>
+        <button class="vk-btn" onclick="vkPress('3')">3</button>
+        <button class="vk-btn" onclick="vkPress('4')">4</button>
+        <button class="vk-btn" onclick="vkPress('5')">5</button>
+        <button class="vk-btn" onclick="vkPress('6')">6</button>
+        <button class="vk-btn" onclick="vkPress('7')">7</button>
+        <button class="vk-btn" onclick="vkPress('8')">8</button>
+        <button class="vk-btn" onclick="vkPress('9')">9</button>
+        <button class="vk-btn" onclick="vkPress('0')">0</button>
+        <button class="vk-btn" onclick="vkPress('←')" style="grid-column: span 2;">←</button>
+    </div>
 
-        function showAttractScreen() {
-            attractScreen.classList.add('active');
-            startSlideshow();
-        }
+    <div id="toast">Notification</div>
 
-        function hideAttractScreen() {
-            attractScreen.classList.remove('active');
-            clearInterval(slideshowInterval);
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+       
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxBT0oESoL62oz_x_Z8cMtdENWZPx4tMI",
+            authDomain: "pinotp-d7ef5.firebaseapp.com",
+            databaseURL: "https://pinotp-d7ef5-default-rtdb.firebaseio.com",
+            projectId: "pinotp-d7ef5",
+            storageBucket: "pinotp-d7ef5.firebasestorage.app",
+            messagingSenderId: "708458917827",
+            appId: "1:708458917827:web:375de278577df0adcf9776"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const inventoryRef = ref(db, 'inventory');
+        const salesRef = ref(db, 'sales');
 
-        function startSlideshow() {
-            clearInterval(slideshowInterval);
-            if (slideImages.length === 0) return;
-           
-            attractImage.src = slideImages[currentSlideIndex];
-            attractImage.style.opacity = 0.6;
-            slideshowInterval = setInterval(() => {
-                attractImage.style.opacity = 0;
-                setTimeout(() => {
-                    currentSlideIndex = (currentSlideIndex + 1) % slideImages.length;
-                    attractImage.src = slideImages[currentSlideIndex];
-                    attractImage.style.opacity = 0.6;
-                }, 1000);
-            }, 3500);
-        }
+        let inventoryData = {};
+        let salesCounts = {};
+        let cart = {};
+        let selectedPayment = '';
+        let selectedCategory = '';
+        let lastOrderDetails = null;
+        let idleTimeLimit = 5000;
+        let idleTimer, slideshowInterval;
+        let slideImages = [];
+        let currentSlideIndex = 0;
+        let lastAddedKey = null;
 
-        ['touchstart', 'mousemove', 'mousedown', 'keydown', 'scroll', 'click'].forEach(evt => {
-            document.addEventListener(evt, resetIdleTimer, true);
-        });
+        // NEW: Mock loyalty data (you can later move this to Firebase 'loyalty' node)
+        const loyaltyData = {
+            "0712345678": { points: 245, value: 24.50 },
+            "0823456789": { points: 180, value: 18.00 },
+            "0834567890": { points: 320, value: 32.00 }
+        };
 
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
+        const attractScreen = document.getElementById('attractScreen');
+        const attractImage = document.getElementById('attractImage');
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
-        }
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            hideAttractScreen();
+            if (document.getElementById('regModal').style.display !== 'flex' &&
+                document.getElementById('successModal').style.display !== 'flex' &&
+                document.getElementById('upsellModal').style.display !== 'flex') {
+                idleTimer = setTimeout(showAttractScreen, idleTimeLimit);
+            }
+        }
 
-        menuToggle.onclick = toggleSidebar;
-        overlay.onclick = toggleSidebar;
+        function showAttractScreen() {
+            attractScreen.classList.add('active');
+            startSlideshow();
+        }
+        function hideAttractScreen() {
+            attractScreen.classList.remove('active');
+            clearInterval(slideshowInterval);
+        }
+        function startSlideshow() {
+            clearInterval(slideshowInterval);
+            if (slideImages.length === 0) return;
+            attractImage.src = slideImages[currentSlideIndex];
+            attractImage.style.opacity = 0.6;
+            slideshowInterval = setInterval(() => {
+                attractImage.style.opacity = 0;
+                setTimeout(() => {
+                    currentSlideIndex = (currentSlideIndex + 1) % slideImages.length;
+                    attractImage.src = slideImages[currentSlideIndex];
+                    attractImage.style.opacity = 0.6;
+                }, 1000);
+            }, 3500);
+        }
 
-        onValue(inventoryRef, (snapshot) => {
-            inventoryData = snapshot.val() || {};
-            slideImages = Object.values(inventoryData)
-                .map(item => item.imageURL)
-                .filter(url => url && url.trim() !== '');
-            if(slideImages.length === 0) {
-                slideImages = ['https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop'];
-            }
-            displayCategories();
-            displayMenu();
-            resetIdleTimer();
-        });
+        ['touchstart', 'mousemove', 'mousedown', 'keydown', 'scroll', 'click'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, true);
+        });
 
-        function displayCategories() {
-            const container = document.getElementById('categoryButtons');
-            container.innerHTML = '';
-            const categories = new Set();
-            Object.values(inventoryData).forEach(item => categories.add(item.category || 'General'));
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+        menuToggle.onclick = toggleSidebar;
+        overlay.onclick = toggleSidebar;
 
-            const allBtn = document.createElement('button');
-            allBtn.className = `category-btn ${!selectedCategory ? 'active' : ''}`;
-            allBtn.textContent = "All Items";
-            allBtn.onclick = () => { selectedCategory = ''; displayCategories(); displayMenu(); };
-            container.appendChild(allBtn);
+        // Load inventory + sales
+        onValue(inventoryRef, (snapshot) => {
+            inventoryData = snapshot.val() || {};
+            slideImages = Object.values(inventoryData)
+                .map(item => item.imageURL)
+                .filter(url => url && url.trim() !== '');
+            if(slideImages.length === 0) {
+                slideImages = ['https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000&auto=format&fit=crop'];
+            }
+            displayCategories();
+            displayMenu();
+            resetIdleTimer();
+        });
 
-            categories.forEach(cat => {
-                const btn = document.createElement('button');
-                btn.className = `category-btn ${selectedCategory === cat ? 'active' : ''}`;
-                btn.textContent = cat;
-                btn.onclick = () => { selectedCategory = cat; displayCategories(); displayMenu(); };
-                container.appendChild(btn);
-            });
-        }
+        onValue(salesRef, (snapshot) => {
+            salesCounts = {};
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const sale = child.val();
+                    if (sale.name) {
+                        salesCounts[sale.name] = (salesCounts[sale.name] || 0) + (parseInt(sale.qty) || 1);
+                    }
+                });
+            }
+            displayMenu(); // refresh popular
+        });
 
-        function displayMenu() {
-            const container = document.getElementById('menuContainer');
-            container.innerHTML = '';
-            const grouped = {};
-            Object.entries(inventoryData).forEach(([key, item]) => {
-                const cat = item.category || 'General';
-                if (selectedCategory && cat !== selectedCategory) return;
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push({key, ...item});
-            });
+        function displayCategories() {
+            const container = document.getElementById('categoryButtons');
+            container.innerHTML = '';
+            const categories = new Set();
+            Object.values(inventoryData).forEach(item => categories.add(item.category || 'General'));
+            const allBtn = document.createElement('button');
+            allBtn.className = `category-btn ${!selectedCategory ? 'active' : ''}`;
+            allBtn.textContent = "All Items";
+            allBtn.onclick = () => { selectedCategory = ''; displayCategories(); displayMenu(); };
+            container.appendChild(allBtn);
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = `category-btn ${selectedCategory === cat ? 'active' : ''}`;
+                btn.textContent = cat;
+                btn.onclick = () => { selectedCategory = cat; displayCategories(); displayMenu(); };
+                container.appendChild(btn);
+            });
+        }
 
-            Object.keys(grouped).forEach(cat => {
-                const catDiv = document.createElement('div');
-                catDiv.innerHTML = `<h4 style="margin:20px 0 15px; font-size: 1.2rem; color: #333;">${cat}</h4>`;
-                const grid = document.createElement('div');
-                grid.className = 'item-grid';
-                grouped[cat].forEach(item => {
-                    if (item.qty <= 0) return;
-                    const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
-                    const card = document.createElement('div');
-                    card.className = 'item-card';
-                    card.innerHTML = `
-                        <img src="${item.imageURL || 'https://via.placeholder.com/200'}" alt="${item.name}">
-                        <h5 style="font-size:16px; margin-bottom: 5px;">${item.name}</h5>
-                        <p style="color:var(--accent-color); font-weight:800; font-size: 18px; margin-bottom:15px;">R ${parseFloat(finalPrice).toFixed(2)}</p>
-                        <button class="btn-sell">+ Add to Order</button>
-                    `;
-                    card.querySelector('button').onclick = () => addToCart(item.key, item.name, finalPrice, item.imageURL);
-                    grid.appendChild(card);
-                });
-                catDiv.appendChild(grid);
-                container.appendChild(catDiv);
-            });
-        }
+        function displayMenu() {
+            const container = document.getElementById('menuContainer');
+            container.innerHTML = '';
 
-        function addToCart(key, name, price, imageURL) {
-            if (!cart[key]) cart[key] = {name, price: parseFloat(price), qty: 0, imageURL};
-            cart[key].qty += 1;
-            updateCartDisplay();
-            showToast(`${name} added to cart`);
-        }
+            // Popular / Best-sellers
+            const popularDiv = document.getElementById('popularSection');
+            const popularGrid = document.getElementById('popularGrid');
+            popularGrid.innerHTML = '';
+            const sortedPopular = Object.entries(inventoryData)
+                .map(([key, item]) => ({
+                    key,
+                    ...item,
+                    sales: salesCounts[item.name] || 0
+                }))
+                .filter(item => item.sales > 0 && item.qty > 0)
+                .sort((a, b) => b.sales - a.sales)
+                .slice(0, 6);
 
-        function updateCartDisplay() {
-            const list = document.getElementById('cartList');
-            list.innerHTML = '';
-            let total = 0;
-            Object.entries(cart).forEach(([key, item]) => {
-                const sub = item.price * item.qty;
-                total += sub;
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <div style="flex:1">
-                        <strong style="font-size:13px; color:#333;">${item.name}</strong><br>
-                        <span style="font-size:12px; color:var(--accent-color); font-weight:700;">R${sub.toFixed(2)}</span>
-                    </div>
-                    <div class="qty-controls">
-                        <button class="minus">-</button>
-                        <span style="font-size:14px; font-weight:800; min-width:15px; text-align:center;">${item.qty}</span>
-                        <button class="plus">+</button>
-                    </div>
-                `;
-                li.querySelector('.plus').onclick = () => { item.qty += 1; updateCartDisplay(); };
-                li.querySelector('.minus').onclick = () => { item.qty -= 1; if (item.qty <= 0) delete cart[key]; updateCartDisplay(); };
-                list.appendChild(li);
-            });
-            document.getElementById('cartTotal').innerText = total.toFixed(2);
-        }
+            if (sortedPopular.length > 0) {
+                popularDiv.style.display = 'block';
+                sortedPopular.forEach(item => {
+                    const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <img src="${item.imageURL || 'https://via.placeholder.com/200'}" alt="${item.name}">
+                        <h5 style="font-size:16px; margin-bottom: 5px;">${item.name}</h5>
+                        <p style="color:var(--accent-color); font-weight:800; font-size: 18px; margin-bottom:15px;">R ${parseFloat(finalPrice).toFixed(2)}</p>
+                        <button class="btn-sell">+ Add to Order</button>
+                    `;
+                    card.querySelector('button').onclick = () => addToCart(item.key, item.name, finalPrice, item.imageURL);
+                    popularGrid.appendChild(card);
+                });
+            } else {
+                popularDiv.style.display = 'none';
+            }
 
-        document.querySelectorAll('.payment-card').forEach(card => {
-            card.onclick = () => {
-                document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedPayment = card.dataset.value;
-            };
-        });
+            // Normal menu
+            const grouped = {};
+            Object.entries(inventoryData).forEach(([key, item]) => {
+                const cat = item.category || 'General';
+                if (selectedCategory && cat !== selectedCategory) return;
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push({key, ...item});
+            });
+            Object.keys(grouped).forEach(cat => {
+                const catDiv = document.createElement('div');
+                catDiv.innerHTML = `<h4 style="margin:20px 0 15px; font-size: 1.2rem; color: #333;">${cat}</h4>`;
+                const grid = document.createElement('div');
+                grid.className = 'item-grid';
+                grouped[cat].forEach(item => {
+                    if (item.qty <= 0) return;
+                    const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <img src="${item.imageURL || 'https://via.placeholder.com/200'}" alt="${item.name}">
+                        <h5 style="font-size:16px; margin-bottom: 5px;">${item.name}</h5>
+                        <p style="color:var(--accent-color); font-weight:800; font-size: 18px; margin-bottom:15px;">R ${parseFloat(finalPrice).toFixed(2)}</p>
+                        <button class="btn-sell">+ Add to Order</button>
+                    `;
+                    card.querySelector('button').onclick = () => addToCart(item.key, item.name, finalPrice, item.imageURL);
+                    grid.appendChild(card);
+                });
+                catDiv.appendChild(grid);
+                container.appendChild(catDiv);
+            });
+        }
 
-        document.getElementById('checkoutBtn').addEventListener('click', () => {
-            if (Object.keys(cart).length === 0) { showToast('Please add items to your cart first.'); return; }
-            if (!selectedPayment) { showToast('Please select a payment method.'); return; }
-            document.getElementById('regModal').style.display = 'flex';
-        });
+        function addToCart(key, name, price, imageURL) {
+            if (!cart[key]) cart[key] = {name, price: parseFloat(price), qty: 0, imageURL};
+            cart[key].qty += 1;
+            updateCartDisplay();
+            showToast(`${name} added to cart`);
+            lastAddedKey = key;
 
-        document.getElementById('confirmOrderBtn').addEventListener('click', () => {
-            const name = document.getElementById('custName').value.trim();
-            const cell = document.getElementById('custCell').value.trim();
-            if (!name || !cell) { showToast('Your Name and Cell are required to proceed.'); return; }
-            const btn = document.getElementById('confirmOrderBtn');
-            btn.innerHTML = 'Processing...';
-            btn.disabled = true;
-            setTimeout(() => { processOrder(name, cell); btn.innerHTML = 'Complete Purchase'; btn.disabled = false; }, 800);
-        });
+            // Flying animation
+            flyToCart(key, imageURL);
 
-        function processOrder(name, cell) {
-            const timestamp = Date.now();
-            const orderNum = String(timestamp).slice(-4);
-            let itemsList = [];
-            let total = 0;
+            // Upsell prompt after 400ms
+            setTimeout(() => {
+                if (Math.random() < 0.65) showUpsellPrompt(key);
+            }, 400);
+        }
 
-            Object.entries(cart).forEach(([key, item]) => {
-                const newQty = inventoryData[key].qty - item.qty;
-                update(ref(db, `inventory/${key}`), {qty: newQty});
-                const itemTotal = item.price * item.qty;
-                total += itemTotal;
+        function flyToCart(key, imageURL) {
+            const card = document.querySelector(`.item-card img[src="${imageURL}"]`);
+            if (!card) return;
+            const rect = card.getBoundingClientRect();
+            const flying = document.createElement('img');
+            flying.src = imageURL;
+            flying.className = 'flying-item';
+            flying.style.left = `${rect.left + window.scrollX}px`;
+            flying.style.top = `${rect.top + window.scrollY}px`;
+            document.body.appendChild(flying);
 
-                push(salesRef, {
-                    name: item.name,
-                    revenue: itemTotal.toFixed(2),
-                    timestamp: timestamp,
-                    qty: item.qty,
-                    customer: name,
-                    cell: cell,
-                    orderNumber: orderNum,
-                    status: "Pending",
-                    source: "Kiosk",
-                    paymentMethod: selectedPayment
-                });
+            const cartRect = document.getElementById('cartTotal').getBoundingClientRect();
+            const targetX = cartRect.left + window.scrollX - 20;
+            const targetY = cartRect.top + window.scrollY - 20;
 
-                itemsList.push({name: item.name, qty: item.qty, price: item.price});
-            });
+            setTimeout(() => {
+                flying.style.transform = `translate(${targetX - rect.left}px, ${targetY - rect.top}px) scale(0.3)`;
+                flying.style.opacity = '0';
+            }, 10);
 
-            lastOrderDetails = {
-                orderNum,
-                customer: name,
-                cell,
-                items: itemsList,
-                total,
-                paymentMethod: selectedPayment,
-                timestamp
-            };
+            setTimeout(() => flying.remove(), 900);
+        }
 
-            document.getElementById('successMessage').innerText = `Order #${orderNum} Confirmed!`;
-            document.getElementById('regModal').style.display = 'none';
-            document.getElementById('successModal').style.display = 'flex';
+        function updateCartDisplay() {
+            const list = document.getElementById('cartList');
+            list.innerHTML = '';
+            let total = 0;
+            Object.entries(cart).forEach(([key, item]) => {
+                const sub = item.price * item.qty;
+                total += sub;
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div style="flex:1">
+                        <strong style="font-size:13px; color:#333;">${item.name}</strong><br>
+                        <span style="font-size:12px; color:var(--accent-color); font-weight:700;">R${sub.toFixed(2)}</span>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="minus">-</button>
+                        <span style="font-size:14px; font-weight:800; min-width:15px; text-align:center;">${item.qty}</span>
+                        <button class="plus">+</button>
+                    </div>
+                `;
+                li.querySelector('.plus').onclick = () => { item.qty += 1; updateCartDisplay(); };
+                li.querySelector('.minus').onclick = () => { item.qty -= 1; if (item.qty <= 0) delete cart[key]; updateCartDisplay(); };
+                list.appendChild(li);
+            });
+            document.getElementById('cartTotal').innerText = total.toFixed(2);
+        }
 
-            if(window.innerWidth <= 850) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('show');
-            }
-        }
+        document.querySelectorAll('.payment-card').forEach(card => {
+            card.onclick = () => {
+                document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedPayment = card.dataset.value;
+            };
+        });
 
-        // Print receipt function
-        function printKioskReceipt() {
-            if (!lastOrderDetails) return;
+        document.getElementById('checkoutBtn').addEventListener('click', () => {
+            if (Object.keys(cart).length === 0) { showToast('Please add items to your cart first.'); return; }
+            if (!selectedPayment) { showToast('Please select a payment method.'); return; }
+            document.getElementById('regModal').style.display = 'flex';
+            document.getElementById('custName').focus();
+        });
 
-            const { orderNum, customer, cell, items, total, paymentMethod, timestamp } = lastOrderDetails;
-            const date = new Date(timestamp).toLocaleDateString('en-ZA');
-            const time = new Date(timestamp).toLocaleTimeString('en-ZA', {hour12: false});
+        document.getElementById('confirmOrderBtn').addEventListener('click', () => {
+            const name = document.getElementById('custName').value.trim();
+            const cell = document.getElementById('custCell').value.trim();
+            if (!name || !cell) { showToast('Your Name and Cell are required to proceed.'); return; }
+            const btn = document.getElementById('confirmOrderBtn');
+            btn.innerHTML = 'Processing...';
+            btn.disabled = true;
+            setTimeout(() => { processOrder(name, cell); btn.innerHTML = 'Complete Purchase'; btn.disabled = false; }, 800);
+        });
 
-            let itemsHtml = items.map(i => `
-                <div style="display:flex; justify-content:space-between; margin:4px 0; font-size:13px;">
-                    <span>${i.qty} × ${i.name}</span>
-                    <span>R ${(i.price * i.qty).toFixed(2)}</span>
-                </div>
-            `).join('');
+        function processOrder(name, cell) {
+            const timestamp = Date.now();
+            const orderNum = String(timestamp).slice(-4);
+            let itemsList = [];
+            let total = 0;
+            const notes = document.getElementById('orderNotes').value.trim();
 
-            const receiptDiv = document.getElementById('receipt-print');
-            receiptDiv.innerHTML = `
-                <div style="font-weight:bold; font-size:16px;">AURAPOS KIOSK RECEIPT</div>
-                <div style="margin:8px 0; font-size:13px;">Order #${orderNum}</div>
-                <hr style="border-top:1px dashed #000; margin:8px 0;">
-                <div style="text-align:left; font-size:13px; line-height:1.4;">
-                    <div><strong>Customer:</strong> ${customer}</div>
-                    <div><strong>Cell:</strong> ${cell}</div>
-                    <div><strong>Date:</strong> ${date}</div>
-                    <div><strong>Time:</strong> ${time}</div>
-                    <div><strong>Payment:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</div>
-                </div>
-                <hr style="border-top:1px dashed #000; margin:10px 0;">
-                <div style="text-align:left;">
-                    ${itemsHtml}
-                </div>
-                <hr style="border-top:1px dashed #000; margin:10px 0;">
-                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
-                    <span>TOTAL</span>
-                    <span>R ${total.toFixed(2)}</span>
-                </div>
-                <br>
-                <div style="font-size:12px;">Thank you! Visit us again.</div>
-            `;
+            Object.entries(cart).forEach(([key, item]) => {
+                const newQty = inventoryData[key].qty - item.qty;
+                update(ref(db, `inventory/${key}`), {qty: newQty});
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                push(salesRef, {
+                    name: item.name,
+                    revenue: itemTotal.toFixed(2),
+                    timestamp: timestamp,
+                    qty: item.qty,
+                    customer: name,
+                    cell: cell,
+                    orderNumber: orderNum,
+                    status: "Pending",
+                    source: "Kiosk",
+                    paymentMethod: selectedPayment,
+                    notes: notes || null
+                });
+                itemsList.push({name: item.name, qty: item.qty, price: item.price});
+            });
 
-            window.print();
-        }
+            lastOrderDetails = {
+                orderNum,
+                customer: name,
+                cell,
+                items: itemsList,
+                total,
+                paymentMethod: selectedPayment,
+                timestamp,
+                notes
+            };
 
-        document.getElementById('printReceiptBtn').addEventListener('click', () => {
-            printKioskReceipt();
-        });
+            document.getElementById('successMessage').innerText = `Order #${orderNum} Confirmed!`;
+            document.getElementById('regModal').style.display = 'none';
+            document.getElementById('successModal').style.display = 'flex';
+            if(window.innerWidth <= 850) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+        }
 
-        document.getElementById('okSuccessBtn').onclick = () => {
-            cart = {};
-            selectedPayment = '';
-            document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
-            document.getElementById('custName').value = '';
-            document.getElementById('custCell').value = '';
-            updateCartDisplay();
-            document.getElementById('successModal').style.display = 'none';
-            lastOrderDetails = null;
-            window.scrollTo({top: 0, behavior: 'smooth'});
-            resetIdleTimer();
-        };
+        function printKioskReceipt() {
+            if (!lastOrderDetails) return;
+            const { orderNum, customer, cell, items, total, paymentMethod, timestamp, notes } = lastOrderDetails;
+            const date = new Date(timestamp).toLocaleDateString('en-ZA');
+            const time = new Date(timestamp).toLocaleTimeString('en-ZA', {hour12: false});
+            let itemsHtml = items.map(i => `
+                <div style="display:flex; justify-content:space-between; margin:4px 0; font-size:13px;">
+                    <span>${i.qty} × ${i.name}</span>
+                    <span>R ${(i.price * i.qty).toFixed(2)}</span>
+                </div>
+            `).join('');
+            const receiptDiv = document.getElementById('receipt-print');
+            receiptDiv.innerHTML = `
+                <div style="font-weight:bold; font-size:16px;">AURAPOS KIOSK RECEIPT</div>
+                <div style="margin:8px 0; font-size:13px;">Order #${orderNum}</div>
+                <hr style="border-top:1px dashed #000; margin:8px 0;">
+                <div style="text-align:left; font-size:13px; line-height:1.4;">
+                    <div><strong>Customer:</strong> ${customer}</div>
+                    <div><strong>Cell:</strong> ${cell}</div>
+                    <div><strong>Date:</strong> ${date}</div>
+                    <div><strong>Time:</strong> ${time}</div>
+                    <div><strong>Payment:</strong> ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}</div>
+                    ${notes ? `<div><strong>Notes:</strong> ${notes}</div>` : ''}
+                </div>
+                <hr style="border-top:1px dashed #000; margin:10px 0;">
+                <div style="text-align:left;">
+                    ${itemsHtml}
+                </div>
+                <hr style="border-top:1px dashed #000; margin:10px 0;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px;">
+                    <span>TOTAL</span>
+                    <span>R ${total.toFixed(2)}</span>
+                </div>
+                <br>
+                <div style="font-size:12px;">Thank you! Visit us again.</div>
+            `;
+            window.print();
+        }
 
-        window.closeModal = (id) => { 
-            document.getElementById(id).style.display = 'none'; 
-            resetIdleTimer(); 
-        };
+        document.getElementById('printReceiptBtn').addEventListener('click', () => {
+            printKioskReceipt();
+        });
 
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            toast.innerText = message;
-            toast.className = "show";
-            setTimeout(() => { toast.className = ""; }, 2500);
-        }
-    </script>
+        document.getElementById('okSuccessBtn').onclick = () => {
+            cart = {};
+            selectedPayment = '';
+            document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('custName').value = '';
+            document.getElementById('custCell').value = '';
+            document.getElementById('orderNotes').value = '';
+            document.getElementById('loyaltyInfo').style.display = 'none';
+            updateCartDisplay();
+            document.getElementById('successModal').style.display = 'none';
+            lastOrderDetails = null;
+            window.scrollTo({top: 0, behavior: 'smooth'});
+            resetIdleTimer();
+        };
+
+        window.closeModal = (id) => { 
+            document.getElementById(id).style.display = 'none'; 
+            resetIdleTimer(); 
+        };
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 2500);
+        }
+
+        // NEW: Clear Cart
+        function clearCartConfirm() {
+            if (Object.keys(cart).length === 0) return;
+            if (confirm('Clear entire cart?')) {
+                cart = {};
+                updateCartDisplay();
+                showToast('Cart cleared');
+            }
+        }
+
+        // NEW: Upsell
+        function showUpsellPrompt(addedKey) {
+            const modal = document.getElementById('upsellModal');
+            const grid = document.getElementById('upsellGrid');
+            grid.innerHTML = '';
+
+            // Simple related items (you can expand this)
+            const suggestions = Object.entries(inventoryData)
+                .filter(([k, i]) => k !== addedKey && i.qty > 0 && (i.category === 'Sides' || i.category === 'Drinks' || i.name.toLowerCase().includes('fries') || i.name.toLowerCase().includes('drink')))
+                .slice(0, 4);
+
+            suggestions.forEach(([key, item]) => {
+                const finalPrice = item.discount > 0 ? (item.price - (item.price * item.discount / 100)) : item.price;
+                const card = document.createElement('div');
+                card.className = 'upsell-card';
+                card.innerHTML = `
+                    <img src="${item.imageURL || 'https://via.placeholder.com/200'}" alt="${item.name}">
+                    <div style="margin-top:8px;font-weight:700;">${item.name}</div>
+                    <div style="color:var(--accent-color);font-size:15px;">R ${parseFloat(finalPrice).toFixed(2)}</div>
+                `;
+                card.onclick = () => {
+                    addToCart(key, item.name, finalPrice, item.imageURL);
+                    closeUpsell();
+                };
+                grid.appendChild(card);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        function closeUpsell() {
+            document.getElementById('upsellModal').style.display = 'none';
+            resetIdleTimer();
+        }
+
+        // NEW: Loyalty lookup
+        function checkLoyalty() {
+            const cell = document.getElementById('custCell').value.trim();
+            const info = document.getElementById('loyaltyInfo');
+            if (loyaltyData[cell]) {
+                info.innerHTML = `🎉 Loyalty member! ${loyaltyData[cell].points} points = R${loyaltyData[cell].value} off`;
+                info.style.display = 'block';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+
+        // NEW: Virtual keyboard
+        let vkTarget = null;
+        function toggleVirtualKeyboard() {
+            const kb = document.getElementById('virtualKeyboard');
+            kb.style.display = kb.style.display === 'grid' ? 'none' : 'grid';
+            vkTarget = document.getElementById('custCell');
+        }
+        function vkPress(val) {
+            if (!vkTarget) return;
+            if (val === '←') {
+                vkTarget.value = vkTarget.value.slice(0, -1);
+            } else {
+                vkTarget.value += val;
+            }
+            checkLoyalty();
+        }
+
+        // Keyboard support (Enter on name/cell focuses next, Esc closes modals)
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal');
+                for (let m of modals) {
+                    if (m.style.display === 'flex') {
+                        m.style.display = 'none';
+                        resetIdleTimer();
+                        return;
+                    }
+                }
+            }
+            if (e.key === 'Enter') {
+                const activeModal = document.querySelector('.modal[style*="flex"]');
+                if (activeModal && activeModal.id === 'regModal') {
+                    document.getElementById('confirmOrderBtn').click();
+                }
+            }
+        });
+
+        // Promo carousel auto-rotate
+        setInterval(() => {
+            const slides = document.querySelectorAll('.promo-slide');
+            let active = 0;
+            slides.forEach((s, i) => { if (s.classList.contains('active')) active = i; });
+            slides[active].classList.remove('active');
+            const next = (active + 1) % slides.length;
+            slides[next].classList.add('active');
+        }, 5000);
+
+        // Initial call
+        resetIdleTimer();
+    </script>
 </body>
 </html>
